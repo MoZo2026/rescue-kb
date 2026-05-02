@@ -4,414 +4,833 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>مركز معرفة الإنقاذ البحري الجوي</title>
-<link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;500;600;700;900&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
 <style>
-  *{margin:0;padding:0;box-sizing:border-box}
-  :root{
-    --bg:#040d1a;--surface:#07142a;--card:#0a1c38;--border:#1a3056;--border2:#0f2040;
-    --gold:#c8a050;--gold2:#e8c070;--text:#c8d8ee;--muted:#5a7a9a;
-    --user:#112a52;--bot:#060f20;--danger:#c05858;--success:#3a9060;--input:#060f20;
-    --scan:repeating-linear-gradient(0deg,transparent,transparent 2px,rgba(10,40,80,.15) 2px,rgba(10,40,80,.15) 4px);
-  }
-  html,body{height:100%;background:var(--bg);font-family:'Cairo',sans-serif;color:var(--text);overflow:hidden}
-  #root{height:100%;display:flex;flex-direction:column;max-width:960px;margin:0 auto}
-  .header{background:linear-gradient(135deg,#040d1a 0%,#071428 60%,#0a1c38 100%);border-bottom:1px solid var(--gold);padding:10px 18px;display:flex;align-items:center;justify-content:space-between;flex-shrink:0;position:relative;overflow:hidden}
-  .header::after{content:'';position:absolute;inset:0;background:var(--scan);pointer-events:none;opacity:.5}
-  .header-logo{display:flex;align-items:center;gap:12px}
-  .anchor{width:42px;height:42px;background:radial-gradient(circle,#c8a05040,#c8a05010);border:1px solid var(--gold);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0;box-shadow:0 0 16px #c8a05030}
-  .header-title{font-size:14px;font-weight:700;color:var(--gold2);line-height:1.3}
-  .header-sub{font-size:10px;color:var(--muted);font-family:'JetBrains Mono',monospace;letter-spacing:.5px}
-  .nav{display:flex;gap:8px;align-items:center}
-  .nav-btn{padding:6px 14px;border-radius:20px;border:1px solid var(--border);background:transparent;color:var(--muted);cursor:pointer;font-size:12px;font-family:'Cairo',sans-serif;transition:all .2s;white-space:nowrap}
-  .nav-btn:hover,.nav-btn.active{border-color:var(--gold);color:var(--gold);background:#c8a05015}
-  .status-dot{width:8px;height:8px;border-radius:50%;background:var(--success);box-shadow:0 0 8px #3a9060;animation:pulse 2s infinite}
-  @keyframes pulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.6;transform:scale(1.3)}}
-  .main{flex:1;overflow:hidden;display:flex;flex-direction:column}
-  .chat-wrap{display:flex;flex-direction:column;height:100%;overflow:hidden}
-  .messages{flex:1;overflow-y:auto;padding:20px;display:flex;flex-direction:column;gap:16px;scroll-behavior:smooth}
-  .messages::-webkit-scrollbar{width:4px}
-  .messages::-webkit-scrollbar-thumb{background:var(--border);border-radius:2px}
-  .msg-row{display:flex;gap:10px;align-items:flex-start;animation:fadeIn .3s ease}
-  .msg-row.user{flex-direction:row-reverse}
-  @keyframes fadeIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
-  .avatar{width:36px;height:36px;border-radius:50%;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:15px;border:1px solid var(--border)}
-  .avatar.bot{background:radial-gradient(#c8a05020,#c8a05005);border-color:#c8a05040}
-  .avatar.user{background:radial-gradient(#1a3a6a,#112050);border-color:#2a4a8a}
-  .bubble{max-width:75%;padding:12px 16px;font-size:13.5px;line-height:1.7;white-space:pre-wrap;word-break:break-word;border-radius:4px 18px 18px 18px;border:1px solid var(--border2);background:var(--bot);position:relative}
-  .bubble.user{border-radius:18px 4px 18px 18px;background:var(--user);border-color:#1e3a6a;text-align:right}
-  .bubble.bot::before{content:'';position:absolute;right:-1px;top:0;bottom:0;width:2px;background:linear-gradient(180deg,var(--gold),transparent);border-radius:1px}
-  .typing{display:flex;align-items:center;gap:6px;padding:14px 20px}
-  .dot{width:8px;height:8px;border-radius:50%;background:var(--gold);opacity:.8;animation:dotBounce 1.4s infinite ease-in-out}
-  .dot:nth-child(2){animation-delay:.2s}.dot:nth-child(3){animation-delay:.4s}
-  @keyframes dotBounce{0%,80%,100%{transform:scale(.8);opacity:.4}40%{transform:scale(1.2);opacity:1}}
-  .input-area{padding:14px 18px;background:linear-gradient(0deg,var(--surface),var(--surface) 90%,transparent);border-top:1px solid var(--border2);display:flex;gap:10px;align-items:flex-end;flex-shrink:0}
-  .chat-input{flex:1;background:var(--input);border:1px solid var(--border);border-radius:12px;padding:12px 16px;color:var(--text);font-size:14px;font-family:'Cairo',sans-serif;outline:none;resize:none;min-height:46px;max-height:120px;line-height:1.5;transition:border-color .2s}
-  .chat-input:focus{border-color:#c8a05080}
-  .chat-input::placeholder{color:var(--muted)}
-  .send-btn{width:46px;height:46px;flex-shrink:0;background:linear-gradient(135deg,var(--gold),#a07830);border:none;border-radius:12px;cursor:pointer;font-size:18px;display:flex;align-items:center;justify-content:center;transition:opacity .2s,transform .1s;color:#fff}
-  .send-btn:hover:not(:disabled){transform:scale(1.05)}
-  .send-btn:disabled{opacity:.4;cursor:not-allowed}
-  .admin-wrap{flex:1;overflow-y:auto;padding:18px}
-  .admin-wrap::-webkit-scrollbar{width:4px}
-  .admin-wrap::-webkit-scrollbar-thumb{background:var(--border)}
-  .admin-top{display:flex;justify-content:space-between;align-items:center;margin-bottom:18px;direction:rtl}
-  .admin-title{font-size:16px;font-weight:700;color:var(--gold2)}
-  .admin-count{font-size:12px;color:var(--muted);margin-top:2px;font-family:'JetBrains Mono',monospace}
-  .action-row{display:flex;gap:8px;flex-wrap:wrap}
-  .btn{padding:8px 16px;border-radius:8px;border:none;cursor:pointer;font-size:13px;font-weight:600;font-family:'Cairo',sans-serif;transition:all .2s;white-space:nowrap}
-  .btn-gold{background:var(--gold);color:#000}.btn-gold:hover{background:var(--gold2)}
-  .btn-outline{background:transparent;border:1px solid var(--border);color:var(--muted)}.btn-outline:hover{border-color:var(--gold);color:var(--gold)}
-  .btn-danger{background:#c0585820;border:1px solid #c0585850;color:var(--danger)}.btn-danger:hover{background:var(--danger);color:#fff}
-  .btn-sm{padding:5px 10px;font-size:12px}
-  .cats{display:flex;gap:6px;margin-bottom:16px;flex-wrap:wrap;direction:rtl}
-  .cat-btn{padding:4px 12px;border-radius:14px;border:1px solid var(--border);background:transparent;color:var(--muted);cursor:pointer;font-size:12px;font-family:'Cairo',sans-serif;transition:all .2s}
-  .cat-btn.active{border-color:var(--gold);color:var(--gold);background:#c8a05015}
-  .card{background:var(--card);border:1px solid var(--border2);border-radius:12px;padding:16px;margin-bottom:10px;transition:border-color .2s}
-  .card:hover{border-color:var(--border)}.card.form-card{border-color:#c8a05040;margin-bottom:16px}
-  .card-header{display:flex;justify-content:space-between;align-items:flex-start;direction:rtl;gap:10px}
-  .card-badge{display:inline-block;padding:2px 10px;border-radius:10px;background:#c8a05018;border:1px solid #c8a05030;color:var(--gold);font-size:11px;margin-bottom:8px}
-  .card-title{font-size:14px;font-weight:600;color:var(--text);margin-bottom:6px;direction:rtl}
-  .card-content{font-size:12px;color:var(--muted);line-height:1.6;direction:rtl}
-  .card-tags{display:flex;gap:4px;flex-wrap:wrap;margin-top:8px}
-  .tag{padding:2px 8px;border-radius:4px;background:var(--border2);color:var(--muted);font-size:11px}
-  .card-actions{display:flex;gap:6px;flex-shrink:0}
-  .form-group{margin-bottom:12px;direction:rtl}
-  .form-label{display:block;font-size:12px;color:var(--muted);margin-bottom:5px}
-  .form-input{width:100%;background:var(--input);border:1px solid var(--border);border-radius:8px;padding:10px 12px;color:var(--text);font-size:13px;font-family:'Cairo',sans-serif;outline:none;transition:border-color .2s;direction:rtl}
-  .form-input:focus{border-color:#c8a05080}
-  textarea.form-input{resize:vertical;min-height:90px}
-  .form-row{display:flex;gap:8px;justify-content:flex-end;margin-top:4px}
-  .form-title{font-size:14px;font-weight:700;color:var(--gold2);margin-bottom:14px;direction:rtl}
-  .login-wrap{flex:1;display:flex;align-items:center;justify-content:center;padding:20px}
-  .login-card{background:var(--card);border:1px solid #c8a05040;border-radius:16px;padding:36px 32px;width:100%;max-width:380px;text-align:center}
-  .login-icon{font-size:44px;margin-bottom:16px;filter:drop-shadow(0 0 12px #c8a05060)}
-  .login-title{font-size:18px;font-weight:700;color:var(--gold2);margin-bottom:4px}
-  .login-sub{font-size:12px;color:var(--muted);margin-bottom:24px;font-family:'JetBrains Mono',monospace}
-  .login-input{width:100%;background:var(--input);border:1px solid var(--border);border-radius:10px;padding:12px 16px;color:var(--text);font-size:14px;font-family:'Cairo',sans-serif;outline:none;text-align:center;margin-bottom:10px;transition:border-color .2s}
-  .login-input:focus{border-color:#c8a05080}
-  .login-err{color:var(--danger);font-size:12px;margin-bottom:10px}
-  .login-btn{width:100%;padding:12px;background:var(--gold);border:none;border-radius:10px;color:#000;font-size:14px;font-weight:700;font-family:'Cairo',sans-serif;cursor:pointer;transition:background .2s}
-  .login-btn:hover{background:var(--gold2)}
-  .notif{position:fixed;top:16px;left:50%;transform:translateX(-50%);background:var(--success);color:#fff;padding:10px 20px;border-radius:8px;font-size:13px;font-weight:600;z-index:999;animation:fadeIn .3s ease;font-family:'Cairo',sans-serif}
-  .stats{display:flex;gap:12px;padding:10px 18px;background:var(--surface);border-bottom:1px solid var(--border2);flex-shrink:0;direction:rtl}
-  .stat{display:flex;align-items:center;gap:6px;font-size:11px;color:var(--muted)}
-  .stat b{color:var(--gold);font-family:'JetBrains Mono',monospace}
-  .empty{text-align:center;padding:40px 20px;color:var(--muted)}
-  .empty-icon{font-size:36px;margin-bottom:8px;opacity:.4}
-  @media(max-width:600px){.header-title{font-size:12px}.bubble{max-width:90%;font-size:13px}.admin-wrap{padding:12px}}
+*{margin:0;padding:0;box-sizing:border-box}
+:root{
+  --bg:#040d1a;--surface:#07142a;--card:#0a1c38;--border:#1a3056;--border2:#0f2040;
+  --gold:#c8a050;--gold2:#e8c070;--text:#c8d8ee;--muted:#5a7a9a;
+  --user:#112a52;--bot:#060f20;--danger:#c05858;--success:#3a9060;--input:#060f20;
+  --scan:repeating-linear-gradient(0deg,transparent,transparent 2px,rgba(10,40,80,.15) 2px,rgba(10,40,80,.15) 4px);
+}
+html,body{height:100%;background:var(--bg);font-family:'Cairo',sans-serif;color:var(--text);overflow:hidden}
+#root{height:100%;display:flex;flex-direction:column;max-width:1100px;margin:0 auto}
+
+/* HEADER */
+.header{background:linear-gradient(135deg,#040d1a,#071428 60%,#0a1c38);border-bottom:1px solid var(--gold);padding:10px 18px;display:flex;align-items:center;justify-content:space-between;flex-shrink:0;position:relative;overflow:hidden;z-index:10}
+.header::after{content:'';position:absolute;inset:0;background:var(--scan);pointer-events:none;opacity:.5}
+.hlogo{display:flex;align-items:center;gap:12px}
+.anchor{width:40px;height:40px;background:radial-gradient(#c8a05040,#c8a05010);border:1px solid var(--gold);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:18px;box-shadow:0 0 16px #c8a05030;flex-shrink:0}
+.htitle{font-size:13px;font-weight:700;color:var(--gold2);line-height:1.3}
+.hsub{font-size:9px;color:var(--muted);font-family:'JetBrains Mono',monospace;letter-spacing:.5px}
+.nav{display:flex;gap:6px;align-items:center}
+.nb{padding:6px 12px;border-radius:20px;border:1px solid var(--border);background:transparent;color:var(--muted);cursor:pointer;font-size:12px;font-family:'Cairo',sans-serif;transition:all .2s;white-space:nowrap;display:flex;align-items:center;gap:5px}
+.nb:hover,.nb.act{border-color:var(--gold);color:var(--gold);background:#c8a05015}
+.sdot{width:8px;height:8px;border-radius:50%;background:var(--success);box-shadow:0 0 8px #3a9060;animation:pulse 2s infinite;flex-shrink:0}
+@keyframes pulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.6;transform:scale(1.3)}}
+
+/* MAIN */
+.main{flex:1;overflow:hidden;display:flex;flex-direction:column;min-height:0}
+
+/* STATS BAR */
+.sbar{display:flex;gap:16px;padding:8px 18px;background:var(--surface);border-bottom:1px solid var(--border2);flex-shrink:0;direction:rtl;flex-wrap:wrap}
+.si{display:flex;align-items:center;gap:5px;font-size:11px;color:var(--muted)}
+.si b{color:var(--gold);font-family:'JetBrains Mono',monospace}
+
+/* CHAT */
+.chat-wrap{display:flex;flex-direction:column;height:100%;overflow:hidden;min-height:0}
+.msgs{flex:1;overflow-y:auto;padding:20px;display:flex;flex-direction:column;gap:14px;scroll-behavior:smooth;min-height:0}
+.msgs::-webkit-scrollbar{width:4px}
+.msgs::-webkit-scrollbar-thumb{background:var(--border);border-radius:2px}
+.mr{display:flex;gap:10px;align-items:flex-start;animation:fi .3s ease}
+.mr.user{flex-direction:row-reverse}
+@keyframes fi{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+.av{width:34px;height:34px;border-radius:50%;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:14px;border:1px solid var(--border)}
+.av.bot{background:radial-gradient(#c8a05020,#c8a05005);border-color:#c8a05040}
+.av.user{background:radial-gradient(#1a3a6a,#112050);border-color:#2a4a8a}
+.bub{max-width:78%;padding:11px 15px;font-size:13.5px;line-height:1.75;white-space:pre-wrap;word-break:break-word;border-radius:4px 18px 18px 18px;border:1px solid var(--border2);background:var(--bot);position:relative}
+.bub.user{border-radius:18px 4px 18px 18px;background:var(--user);border-color:#1e3a6a;text-align:right}
+.bub.bot::before{content:'';position:absolute;right:-1px;top:0;bottom:0;width:2px;background:linear-gradient(180deg,var(--gold),transparent);border-radius:1px}
+.typing{display:flex;align-items:center;gap:6px;padding:12px 18px}
+.dot{width:7px;height:7px;border-radius:50%;background:var(--gold);animation:db 1.4s infinite ease-in-out}
+.dot:nth-child(2){animation-delay:.2s}.dot:nth-child(3){animation-delay:.4s}
+@keyframes db{0%,80%,100%{transform:scale(.8);opacity:.4}40%{transform:scale(1.2);opacity:1}}
+.iarea{padding:12px 16px;background:linear-gradient(0deg,var(--surface),var(--surface) 90%,transparent);border-top:1px solid var(--border2);display:flex;gap:10px;align-items:flex-end;flex-shrink:0}
+.ci{flex:1;background:var(--input);border:1px solid var(--border);border-radius:12px;padding:11px 15px;color:var(--text);font-size:14px;font-family:'Cairo',sans-serif;outline:none;resize:none;min-height:44px;max-height:120px;line-height:1.5;transition:border-color .2s}
+.ci:focus{border-color:#c8a05080}
+.ci::placeholder{color:var(--muted)}
+.sbtn{width:44px;height:44px;flex-shrink:0;background:linear-gradient(135deg,var(--gold),#a07830);border:none;border-radius:12px;cursor:pointer;font-size:17px;display:flex;align-items:center;justify-content:center;transition:all .15s;color:#fff}
+.sbtn:hover:not(:disabled){transform:scale(1.06)}
+.sbtn:disabled{opacity:.4;cursor:not-allowed}
+
+/* FILES VIEW */
+.files-wrap{display:flex;flex-direction:column;height:100%;overflow:hidden;min-height:0}
+.ftop{padding:14px 18px 0;flex-shrink:0;direction:rtl}
+.ftop-row{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;gap:10px;flex-wrap:wrap}
+.ftitle{font-size:15px;font-weight:700;color:var(--gold2)}
+.faction-row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+
+/* UPLOAD ZONE */
+.upzone{
+  border:2px dashed var(--border);border-radius:14px;
+  padding:24px 16px;text-align:center;cursor:pointer;
+  transition:all .25s;margin:0 18px 14px;flex-shrink:0;
+  background:#07142a80;position:relative;overflow:hidden;
+}
+.upzone:hover,.upzone.drag{border-color:var(--gold);background:#c8a05008}
+.upzone-icon{font-size:32px;margin-bottom:8px}
+.upzone-text{font-size:13px;color:var(--muted);line-height:1.6}
+.upzone-text b{color:var(--gold2)}
+.upzone input{position:absolute;inset:0;opacity:0;cursor:pointer;width:100%;height:100%}
+
+/* PROGRESS */
+.prog-bar{height:4px;background:var(--border2);border-radius:2px;overflow:hidden;margin:0 18px 10px;flex-shrink:0}
+.prog-fill{height:100%;background:linear-gradient(90deg,var(--gold),var(--gold2));border-radius:2px;transition:width .3s;width:0%}
+.prog-label{font-size:11px;color:var(--muted);text-align:center;margin:0 18px 8px;direction:rtl;flex-shrink:0}
+
+/* CATS */
+.cats{display:flex;gap:6px;padding:0 18px 10px;flex-wrap:wrap;flex-shrink:0;direction:rtl}
+.cb{padding:4px 14px;border-radius:14px;border:1px solid var(--border);background:transparent;color:var(--muted);cursor:pointer;font-size:12px;font-family:'Cairo',sans-serif;transition:all .2s}
+.cb.act{border-color:var(--gold);color:var(--gold);background:#c8a05015}
+
+/* SELECTION BAR */
+.selbar{
+  display:flex;align-items:center;gap:10px;padding:8px 18px;
+  background:#c8a05015;border-bottom:1px solid var(--gold)40;
+  flex-shrink:0;direction:rtl;flex-wrap:wrap
+}
+.selbar span{font-size:12px;color:var(--gold)}
+
+/* FILE GRID */
+.fgrid{flex:1;overflow-y:auto;padding:0 18px 18px;display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:12px;align-content:start;min-height:0}
+.fgrid::-webkit-scrollbar{width:4px}
+.fgrid::-webkit-scrollbar-thumb{background:var(--border);border-radius:2px}
+
+/* FILE CARD */
+.fcard{
+  background:var(--card);border:1px solid var(--border2);border-radius:12px;
+  padding:14px;cursor:pointer;transition:all .2s;position:relative;
+  display:flex;flex-direction:column;gap:8px;direction:rtl
+}
+.fcard:hover{border-color:var(--border);transform:translateY(-1px)}
+.fcard.selected{border-color:var(--gold);background:#c8a05012}
+.fcard-check{
+  position:absolute;top:10px;left:10px;width:20px;height:20px;
+  border-radius:5px;border:2px solid var(--border);background:var(--input);
+  display:flex;align-items:center;justify-content:center;font-size:12px;
+  transition:all .15s
+}
+.fcard.selected .fcard-check{border-color:var(--gold);background:var(--gold);color:#000}
+.fcard-icon{font-size:32px;text-align:center}
+.fcard-name{font-size:12px;font-weight:600;color:var(--text);word-break:break-all;text-align:right}
+.fcard-badge{display:inline-block;padding:2px 8px;border-radius:8px;background:#c8a05018;border:1px solid #c8a05030;color:var(--gold);font-size:10px;align-self:flex-start}
+.fcard-size{font-size:10px;color:var(--muted)}
+.fcard-date{font-size:10px;color:var(--muted)}
+.fcard-ext{font-size:10px;color:#5a9a7a;font-family:'JetBrains Mono',monospace}
+
+/* EMPTY */
+.empty{grid-column:1/-1;text-align:center;padding:60px 20px;color:var(--muted)}
+.ei{font-size:48px;margin-bottom:12px;opacity:.3}
+
+/* ADMIN */
+.admin-wrap{flex:1;overflow-y:auto;padding:18px;direction:rtl}
+.admin-wrap::-webkit-scrollbar{width:4px}
+.admin-wrap::-webkit-scrollbar-thumb{background:var(--border)}
+.atop{display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;gap:10px;flex-wrap:wrap}
+.atitle{font-size:15px;font-weight:700;color:var(--gold2)}
+.acount{font-size:11px;color:var(--muted);font-family:'JetBrains Mono',monospace}
+.acard{background:var(--card);border:1px solid var(--border2);border-radius:12px;padding:14px;margin-bottom:10px;transition:border-color .2s;direction:rtl}
+.acard:hover{border-color:var(--border)}
+.acard.fc{border-color:#c8a05040;margin-bottom:16px}
+.ach{display:flex;justify-content:space-between;align-items:flex-start;gap:10px}
+.abadge{display:inline-block;padding:2px 10px;border-radius:10px;background:#c8a05018;border:1px solid #c8a05030;color:var(--gold);font-size:11px;margin-bottom:6px}
+.act-title{font-size:14px;font-weight:600;color:var(--text);margin-bottom:5px}
+.act-content{font-size:12px;color:var(--muted);line-height:1.6}
+.atags{display:flex;gap:4px;flex-wrap:wrap;margin-top:8px}
+.tag{padding:2px 8px;border-radius:4px;background:var(--border2);color:var(--muted);font-size:11px}
+.aactions{display:flex;gap:6px;flex-shrink:0}
+
+/* FORMS */
+.fg{margin-bottom:12px}
+.fl{display:block;font-size:12px;color:var(--muted);margin-bottom:5px}
+.fi{width:100%;background:var(--input);border:1px solid var(--border);border-radius:8px;padding:10px 12px;color:var(--text);font-size:13px;font-family:'Cairo',sans-serif;outline:none;transition:border-color .2s;direction:rtl}
+.fi:focus{border-color:#c8a05080}
+textarea.fi{resize:vertical;min-height:90px}
+.fr{display:flex;gap:8px;justify-content:flex-end;margin-top:4px}
+.form-title{font-size:14px;font-weight:700;color:var(--gold2);margin-bottom:14px}
+
+/* BUTTONS */
+.btn{padding:7px 14px;border-radius:8px;border:none;cursor:pointer;font-size:12px;font-weight:600;font-family:'Cairo',sans-serif;transition:all .2s;white-space:nowrap;display:inline-flex;align-items:center;gap:5px}
+.bg{background:var(--gold);color:#000}.bg:hover{background:var(--gold2)}
+.bo{background:transparent;border:1px solid var(--border);color:var(--muted)}.bo:hover{border-color:var(--gold);color:var(--gold)}
+.bd{background:#c0585820;border:1px solid #c0585850;color:var(--danger)}.bd:hover{background:var(--danger);color:#fff}
+.bsm{padding:4px 10px;font-size:11px}
+
+/* LOGIN */
+.lw{flex:1;display:flex;align-items:center;justify-content:center;padding:20px}
+.lc{background:var(--card);border:1px solid #c8a05040;border-radius:16px;padding:36px 32px;width:100%;max-width:360px;text-align:center}
+.li2{font-size:40px;margin-bottom:14px;filter:drop-shadow(0 0 12px #c8a05060)}
+.lt{font-size:17px;font-weight:700;color:var(--gold2);margin-bottom:4px}
+.ls{font-size:11px;color:var(--muted);margin-bottom:22px;font-family:'JetBrains Mono',monospace}
+.lin{width:100%;background:var(--input);border:1px solid var(--border);border-radius:10px;padding:12px 16px;color:var(--text);font-size:14px;font-family:'Cairo',sans-serif;outline:none;text-align:center;margin-bottom:10px;transition:border-color .2s}
+.lin:focus{border-color:#c8a05080}
+.lerr{color:var(--danger);font-size:12px;margin-bottom:10px}
+.lbtn{width:100%;padding:12px;background:var(--gold);border:none;border-radius:10px;color:#000;font-size:14px;font-weight:700;font-family:'Cairo',sans-serif;cursor:pointer}
+.lbtn:hover{background:var(--gold2)}
+
+/* MODAL */
+.overlay{position:fixed;inset:0;background:#00000090;z-index:100;display:flex;align-items:center;justify-content:center;padding:20px;backdrop-filter:blur(4px)}
+.modal{background:var(--card);border:1px solid var(--gold)40;border-radius:16px;padding:24px;width:100%;max-width:420px;direction:rtl}
+.modal-title{font-size:15px;font-weight:700;color:var(--gold2);margin-bottom:16px}
+.modal-btns{display:flex;gap:8px;justify-content:flex-end;margin-top:16px}
+
+/* NOTIF */
+.notif{position:fixed;top:16px;left:50%;transform:translateX(-50%) translateY(0);background:var(--success);color:#fff;padding:10px 22px;border-radius:10px;font-size:13px;font-weight:600;z-index:999;animation:fi .3s ease;font-family:'Cairo',sans-serif;white-space:nowrap;box-shadow:0 4px 20px #00000050}
+
+/* LOADING SPINNER */
+.spin{width:16px;height:16px;border:2px solid #c8a05040;border-top-color:var(--gold);border-radius:50%;animation:sp .6s linear infinite;flex-shrink:0}
+@keyframes sp{to{transform:rotate(360deg)}}
+
+/* WELCOME */
+.welcome{text-align:center;padding:28px 16px;direction:rtl}
+.wicon{font-size:44px;margin-bottom:10px;filter:drop-shadow(0 0 16px #c8a05060)}
+.wtitle{font-size:15px;font-weight:700;color:#c8a050;margin-bottom:8px}
+.wsub{font-size:13px;color:#5a7a9a;line-height:1.7;max-width:380px;margin:0 auto 16px}
+.wqs{display:flex;gap:7px;justify-content:center;flex-wrap:wrap}
+
+@media(max-width:580px){
+  .htitle{font-size:11px}.nb{padding:5px 9px;font-size:11px}
+  .fgrid{grid-template-columns:repeat(auto-fill,minmax(140px,1fr))}
+  .bub{max-width:88%;font-size:13px}
+  .upzone{margin:0 10px 12px;padding:18px 12px}
+}
 </style>
 </head>
 <body>
 <div id="root"></div>
+
 <script>
-// ══════════════════════════════════════════
-//   مركز معرفة الإنقاذ البحري الجوي
-//   Naval Aviation Rescue Swimming KB
-//   Version 1.0
-// ══════════════════════════════════════════
+// ═══════════════════════════════════════════════
+//  مركز معرفة الإنقاذ البحري الجوي — v2.0
+//  Naval Aviation Rescue Swimming Knowledge Base
+// ═══════════════════════════════════════════════
 
-// ⚠️ غيّر كلمة المرور هنا قبل النشر
-const ADMIN_PW = "rescue@2024";
+// ── CONFIG ─────────────────────────────────────
+const SB_URL    = "https://swsrivfhyqurwxnqisso.supabase.co";
+const SB_KEY    = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InN3c3JpdmZoeXF1cnd4bnFpc3NvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzc3MTQxNjQsImV4cCI6MjA5MzI5MDE2NH0.9L1yjhX-S7gZOFuEWckVh89wHKFOexwcq0S7TY_gFwI";
+const GEM_KEY   = "AIzaSyCNcv5P2qsfXiBSG4mXveBdudOR94VqrW8";
+const ADMIN_PW  = "rescue@2024"; // ← غيّر هذا
+const BUCKET    = "files";
 
-// مفتاح Gemini API
-const GEMINI_KEY = "AIzaSyCNcv5P2qsfXiBSG4mXveBdudOR94VqrW8";
+// ── SUPABASE ────────────────────────────────────
+const sb = window.supabase.createClient(SB_URL, SB_KEY);
 
-// ══════════ البيانات التجريبية ══════════
-const DEMO_KNOWLEDGE = [
-  {id:1,category:"إجراءات الإنقاذ",title:"تسلسل الإنقاذ البحري الجوي",
-   content:`Naval Aviation Rescue Swimming Sequence (NARS):
-1. Situation Assessment — Evaluate hazards: currents, debris, sea state, survivor condition
-2. Communication — Confirm with aircrew: Ready signal, establish abort criteria
-3. Entry — Giant stride, feet-first, or head-first based on conditions
-4. Approach — Defensive swimming; avoid direct front approach to panicking survivor
-5. Stabilization — Apply rescue collar, assess ABC (Airway, Breathing, Circulation)
-6. Extraction — Signal aircrew, maintain position during hoist
+// ── PDF.js ──────────────────────────────────────
+if(window.pdfjsLib) pdfjsLib.GlobalWorkerOptions.workerSrc =
+  "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js";
 
-بالعربية: تقييم الموقف ← التواصل مع الطيار ← الدخول الصحيح ← الاقتراب الدفاعي ← تثبيت المنكوب ← الإخلاء`,
-   tags:"rescue,إنقاذ,procedure,تسلسل,NARS,sequence"},
-  {id:2,category:"المعدات",title:"معدات سباح الإنقاذ الأساسية",
-   content:`Primary Rescue Swimmer Equipment:
-• Wetsuit/Drysuit (بدلة الغوص) — Thermal protection
-• Mask + Fins (قناع وزعانف) — Full-face or half mask
-• Rescue Collar (طوق الإنقاذ) — Inflatable for survivor stabilization
-• Harness & Cable (حزام وحبل الرفع) — Rated for hoist operations
-• Communication Device (جهاز اتصال) — Waterproof, helmet-mounted
-• Strobe Light (ضوء وميضي) — Activated before water entry
-• Knife (سكين) — Quick-release, stainless, lower leg mount`,
-   tags:"equipment,معدات,wetsuit,harness,collar,gear,تجهيزات"},
-  {id:3,category:"الطب التطبيقي",title:"الإنعاش القلبي الرئوي — الغريق",
-   content:`CPR for Drowning Victims:
-• CPR CANNOT be performed in water — extract first
-• After Extraction: Open airway → Check breathing → Begin CPR 30:2
-• Rate: 100–120 compressions/minute, Depth: 5–6 cm
-• Near-Drowning: Treat as cardiac arrest even with pulse
-• Hypothermia: "Not dead until warm and dead" — continue CPR until 32°C core temp
-
-بالعربية: لا تبدأ في الماء — أخرج أولاً — 30 ضغطة : 2 نفس — 100-120/دقيقة`,
-   tags:"CPR,إنعاش,drowning,غرق,first aid,إسعاف,cardiac"},
-  {id:4,category:"الإشارات",title:"إشارات يد سباح الإنقاذ مع الطائرة",
-   content:`Hand Signals — Swimmer to Aircrew:
-• 👍 Thumbs Up = OK / Ready / Hoist me
-• 👎 Thumbs Down = Problem / Hold / Do not proceed
-• 🙌 Hands on Head = Urgent assistance needed
-• One Arm Wave = Move in that direction
-• ✖️ Arms Crossed = ABORT all operations
-• Horizontal Arm Rotation = Hoist up faster
-• Vertical Arm Rotation = Hoist down slower`,
-   tags:"signals,إشارات,hand signals,aircraft,hoist,رفع,communication"},
-  {id:5,category:"السلامة",title:"قائمة الفحص قبل الإنزال",
-   content:`Pre-Deployment Checklist:
-✓ Equipment check: All gear secured, knife accessible, comm tested
-✓ Survivor assessment: Number, visible condition from aircraft
-✓ Hazard evaluation: Shark indicators, current, sea state (Beaufort)
-✓ Abort criteria: Established with aircrew
-✓ Entry method: Selected based on conditions
-Minimum GO: Sea State ≤ 4, Visibility > 500m, No confirmed predator activity`,
-   tags:"safety,سلامة,checklist,قائمة فحص,pre-deployment"},
-  {id:6,category:"النظرية",title:"تصنيف حالات الغرق",
-   content:`Drowning Classification:
-1. Active (نشط): Conscious, struggling — SHORT window (20-60 sec)
-2. Passive (سلبي): Unconscious, face-down — medical emergency
-3. Near-Drowning (قارب الغرق): Survived, monitor for Secondary Drowning
-4. Dry Drowning (جاف): Laryngospasm without aspiration — 15% of cases
-5. Secondary: Delayed pulmonary edema 1-24h after rescue
-
-Submersion vs Survival: <5min High | 5-10min Moderate | >25min Rare (unless hypothermia)`,
-   tags:"drowning,غرق,classification,تصنيف,near-drowning,theory,نظرية"}
+// ── CATEGORIES ─────────────────────────────────
+const DEFAULT_CATS = [
+  "إجراءات الإنقاذ","المعدات والتجهيزات","الطب التطبيقي",
+  "العمليات الجوية","السلامة والمعايير","المراجع والكتب","غير مصنف"
 ];
 
-// ══════════ الحالة ══════════
+// ── STATE ───────────────────────────────────────
 let S = {
-  view:"chat",adminAuth:false,
-  knowledge:JSON.parse(localStorage.getItem("kb_data")||"null")||DEMO_KNOWLEDGE,
-  messages:[],input:"",loading:false,
-  pwInput:"",pwError:"",filterCat:"الكل",
-  showAddForm:false,editEntry:null,
-  formData:{category:"",title:"",content:"",tags:""},
-  notification:"",notifTimer:null
+  view: "chat",              // chat | files | login | admin
+  adminAuth: false,
+  // chat
+  msgs: [], inp: "", loading: false,
+  // files
+  files: [], filesLoading: false,
+  filterCat: "الكل", selected: new Set(),
+  uploading: false, uploadPct: 0, uploadLabel: "",
+  showMoveModal: false, moveCat: "",
+  // knowledge (admin)
+  knowledge: JSON.parse(localStorage.getItem("kb_v2")||"null") || [],
+  showAddForm: false, editEntry: null,
+  formData: {category:"",title:"",content:"",tags:""},
+  // auth
+  pw: "", pwErr: "",
+  // ui
+  notif: "", notifTimer: null,
+  // drag
+  drag: false,
 };
 
-function saveKB(){ localStorage.setItem("kb_data",JSON.stringify(S.knowledge)); }
+function saveKB(){ localStorage.setItem("kb_v2", JSON.stringify(S.knowledge)); }
 
-// ══════════ Gemini API ══════════
-async function callGemini(q){
-  const ctx = S.knowledge.map(k=>
-    `[${k.category}]\nالعنوان: ${k.title}\nالمحتوى: ${k.content}\nالكلمات: ${k.tags}`
-  ).join("\n\n═══\n\n");
-  const sys=`أنت مساعد تعليمي متخصص حصرياً في مجال الإنقاذ البحري الجوي (Naval Aviation Rescue Swimming).
+// ── GEMINI ──────────────────────────────────────
+async function callGemini(question){
+  // Build context from KB entries + file extracted texts
+  const kbCtx = S.knowledge.map(k=>
+    `[${k.category||"عام"}] ${k.title}\n${k.content}`
+  ).join("\n\n---\n\n");
+
+  const fileCtx = S.files
+    .filter(f => f.extracted_text && f.extracted_text.length > 10)
+    .map(f => `[ملف: ${f.original_name} | ${f.category}]\n${f.extracted_text.substring(0,2000)}`)
+    .join("\n\n---\n\n");
+
+  const fullCtx = [kbCtx, fileCtx].filter(Boolean).join("\n\n═══════\n\n");
+
+  const sys = `أنت مساعد تعليمي متخصص حصرياً في مجال الإنقاذ البحري الجوي (Naval Aviation Rescue Swimming).
+
 القواعد الصارمة:
-١. أجب فقط على ما يتعلق بالإنقاذ البحري الجوي.
-٢. إذا كان السؤال خارج هذا المجال قل: "هذا السؤال خارج نطاق تخصصي."
-٣. لا تكشف هوية أي شخص أو معلومات خاصة.
-٤. لا تذكر أنك Gemini أو AI — أنت مساعد مركز المعرفة فقط.
-٥. أجب بلغة المستخدم (عربي أو إنجليزي) تلقائياً.
-٦. إذا لم تجد الجواب في قاعدة المعرفة، قل ذلك بوضوح.
-٧. كن دقيقاً ومنظماً ومختصراً.
-قاعدة المعرفة:
-${ctx}`;
-  const r=await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${GEMINI_KEY}`,
-    {method:"POST",headers:{"Content-Type":"application/json"},
-     body:JSON.stringify({system_instruction:{parts:[{text:sys}]},contents:[{role:"user",parts:[{text:q}]}],
-       generationConfig:{temperature:0.1,maxOutputTokens:1200}})});
-  const d=await r.json();
+١. أجب فقط عن الإنقاذ البحري الجوي. إذا كان السؤال خارج هذا المجال قل: "هذا خارج نطاق تخصصي."
+٢. لا تكشف هوية أحد أو معلومات خاصة.
+٣. لا تذكر أنك Gemini أو AI — أنت مساعد مركز المعرفة فقط.
+٤. أجب بلغة المستخدم تلقائياً (عربي أو إنجليزي).
+٥. إذا لم تجد الجواب قل ذلك بوضوح بدلاً من الاختراع.
+٦. كن دقيقاً، منظماً، ومختصراً. استخدم الأرقام والنقاط عند الحاجة.
+٧. عند الإجابة من ملف، اذكر اسم الملف المصدر.
+
+${fullCtx ? "قاعدة المعرفة والملفات المتاحة:\n" + fullCtx : "قاعدة المعرفة فارغة حالياً — حث المستخدم على رفع ملفات أو إضافة محتوى."}`;
+
+  const r = await fetch(
+    `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${GEM_KEY}`,
+    { method:"POST", headers:{"Content-Type":"application/json"},
+      body: JSON.stringify({
+        system_instruction:{parts:[{text:sys}]},
+        contents:[{role:"user",parts:[{text:question}]}],
+        generationConfig:{temperature:0.15, maxOutputTokens:1400}
+      })
+    }
+  );
+  const d = await r.json();
   if(d.error) throw new Error(d.error.message);
-  return d.candidates?.[0]?.content?.parts?.[0]?.text||"لم أتمكن من الإجابة.";
+  return d.candidates?.[0]?.content?.parts?.[0]?.text || "لم أتمكن من الإجابة.";
 }
 
-// ══════════ الإجراءات ══════════
-function notif(m){
-  if(S.notifTimer)clearTimeout(S.notifTimer);
-  S.notification=m;render();
-  S.notifTimer=setTimeout(()=>{S.notification="";render();},2800);
+// ── PDF EXTRACT ─────────────────────────────────
+async function extractPDF(file){
+  try {
+    const buf = await file.arrayBuffer();
+    const pdf = await pdfjsLib.getDocument({data:buf}).promise;
+    let text = "";
+    for(let i=1; i<=Math.min(pdf.numPages, 50); i++){
+      const pg = await pdf.getPage(i);
+      const ct = await pg.getTextContent();
+      text += ct.items.map(it=>it.str).join(" ") + "\n";
+    }
+    return text.trim().substring(0, 15000);
+  } catch(e){
+    return "";
+  }
 }
-async function send(){
-  const q=S.input.trim();if(!q||S.loading)return;
-  S.input="";S.messages.push({role:"user",content:q});S.loading=true;render();scrollEnd();
-  try{const a=await callGemini(q);S.messages.push({role:"bot",content:a});}
-  catch(e){S.messages.push({role:"bot",content:"⚠️ خطأ في الاتصال. تحقق من الإنترنت.\nConnection error. Check your internet."});}
-  S.loading=false;render();scrollEnd();
+
+// ── FILE ICON ───────────────────────────────────
+function fileIcon(type){
+  if(!type) return "📄";
+  if(type.includes("pdf")) return "📕";
+  if(type.includes("image")) return "🖼️";
+  if(type.includes("presentation")||type.includes("powerpoint")) return "📊";
+  if(type.includes("word")||type.includes("document")) return "📝";
+  if(type.includes("sheet")||type.includes("excel")) return "📗";
+  if(type.includes("video")) return "🎬";
+  return "📄";
 }
-function scrollEnd(){setTimeout(()=>document.getElementById("msg-end")?.scrollIntoView({behavior:"smooth"}),50);}
-function login(){
-  if(S.pwInput===ADMIN_PW){S.adminAuth=true;S.pwError="";S.view="admin";render();}
-  else{S.pwError="كلمة المرور غير صحيحة / Incorrect password";render();}
+
+function fmtSize(b){
+  if(!b) return "";
+  if(b<1024) return b+"B";
+  if(b<1048576) return (b/1024).toFixed(1)+"KB";
+  return (b/1048576).toFixed(1)+"MB";
 }
-function logout(){S.adminAuth=false;S.view="chat";S.pwInput="";render();}
+
+function fmtDate(d){
+  if(!d) return "";
+  return new Date(d).toLocaleDateString("ar-SA",{month:"short",day:"numeric"});
+}
+
+// ── LOAD FILES ──────────────────────────────────
+async function loadFiles(){
+  S.filesLoading = true; render();
+  try {
+    const {data,error} = await sb.from("file_metadata").select("*").order("created_at",{ascending:false});
+    if(error) throw error;
+    S.files = data || [];
+  } catch(e){
+    notif("❌ خطأ في تحميل الملفات: " + e.message);
+  }
+  S.filesLoading = false; render();
+}
+
+// ── UPLOAD ──────────────────────────────────────
+async function uploadFiles(fileList){
+  if(!fileList || !fileList.length) return;
+  S.uploading = true; S.selected.clear(); render();
+  let done = 0;
+  for(const file of Array.from(fileList)){
+    S.uploadLabel = `جارٍ رفع: ${file.name}`;
+    S.uploadPct = Math.round((done/fileList.length)*100);
+    render();
+    try {
+      // 1. Extract text if PDF
+      let extracted = "";
+      if(file.type.includes("pdf")){
+        S.uploadLabel = `استخراج النص: ${file.name}`;
+        render();
+        extracted = await extractPDF(file);
+      }
+      // 2. Upload to Supabase Storage
+      const ext = file.name.split(".").pop();
+      const path = `${Date.now()}_${Math.random().toString(36).slice(2)}.${ext}`;
+      const {error:upErr} = await sb.storage.from(BUCKET).upload(path, file, {upsert:true});
+      if(upErr) throw upErr;
+      // 3. Get public URL
+      const {data:urlData} = sb.storage.from(BUCKET).getPublicUrl(path);
+      // 4. Save metadata to DB
+      const {error:dbErr} = await sb.from("file_metadata").insert({
+        name: path,
+        original_name: file.name,
+        category: "غير مصنف",
+        file_type: file.type || ext,
+        file_size: file.size,
+        storage_path: path,
+        public_url: urlData.publicUrl,
+        extracted_text: extracted,
+        tags: ""
+      });
+      if(dbErr) throw dbErr;
+      done++;
+    } catch(e){
+      notif("❌ فشل رفع " + file.name + ": " + e.message);
+    }
+  }
+  S.uploadPct = 100;
+  S.uploadLabel = `✅ تم رفع ${done} من ${fileList.length} ملف`;
+  render();
+  await loadFiles();
+  setTimeout(()=>{ S.uploading=false; S.uploadPct=0; S.uploadLabel=""; render(); }, 1500);
+  if(done>0) notif(`✅ تم رفع ${done} ملف بنجاح`);
+}
+
+// ── DELETE FILES ────────────────────────────────
+async function deleteSelected(){
+  if(!S.selected.size) return;
+  if(!confirm(`هل تريد حذف ${S.selected.size} ملف؟`)) return;
+  const ids = [...S.selected];
+  let ok = 0;
+  for(const id of ids){
+    const f = S.files.find(x=>x.id===id);
+    if(!f) continue;
+    try {
+      await sb.storage.from(BUCKET).remove([f.storage_path]);
+      await sb.from("file_metadata").delete().eq("id",id);
+      ok++;
+    } catch(e){}
+  }
+  S.selected.clear();
+  notif(`🗑️ تم حذف ${ok} ملف`);
+  await loadFiles();
+}
+
+// ── MOVE CATEGORY ───────────────────────────────
+async function moveSelected(){
+  if(!S.selected.size || !S.moveCat) return;
+  const ids = [...S.selected];
+  for(const id of ids){
+    await sb.from("file_metadata").update({category:S.moveCat}).eq("id",id);
+  }
+  S.selected.clear(); S.showMoveModal=false;
+  notif(`✅ تم نقل ${ids.length} ملف إلى "${S.moveCat}"`);
+  await loadFiles();
+}
+
+// ── DELETE SINGLE ───────────────────────────────
+async function deleteFile(id){
+  const f = S.files.find(x=>x.id===id);
+  if(!f || !confirm("حذف هذا الملف؟")) return;
+  try {
+    await sb.storage.from(BUCKET).remove([f.storage_path]);
+    await sb.from("file_metadata").delete().eq("id",id);
+    S.files = S.files.filter(x=>x.id!==id);
+    notif("🗑️ تم الحذف");
+    render();
+  } catch(e){ notif("❌ فشل الحذف"); }
+}
+
+// ── TOGGLE SELECT ───────────────────────────────
+function toggleSel(id){
+  if(S.selected.has(id)) S.selected.delete(id);
+  else S.selected.add(id);
+  render();
+}
+function selAll(){
+  const shown = filtered();
+  if(S.selected.size===shown.length) S.selected.clear();
+  else shown.forEach(f=>S.selected.add(f.id));
+  render();
+}
+function filtered(){
+  return S.filterCat==="الكل" ? S.files : S.files.filter(f=>f.category===S.filterCat);
+}
+function allCats(){
+  return ["الكل",...new Set([...DEFAULT_CATS,...S.files.map(f=>f.category).filter(Boolean)])];
+}
+
+// ── CHAT ────────────────────────────────────────
+async function sendMsg(){
+  const q = S.inp.trim();
+  if(!q||S.loading) return;
+  S.inp=""; S.msgs.push({r:"user",t:q}); S.loading=true; render(); scrollEnd();
+  try {
+    const a = await callGemini(q);
+    S.msgs.push({r:"bot",t:a});
+  } catch(e){
+    S.msgs.push({r:"bot",t:"⚠️ خطأ في الاتصال. تحقق من الإنترنت.\nConnection error."});
+  }
+  S.loading=false; render(); scrollEnd();
+}
+function scrollEnd(){ setTimeout(()=>document.getElementById("me")?.scrollIntoView({behavior:"smooth"}),60); }
+
+// ── ADMIN ────────────────────────────────────────
 function addEntry(){
-  if(!S.formData.title||!S.formData.content)return;
+  if(!S.formData.title||!S.formData.content) return;
   S.knowledge.unshift({...S.formData,id:Date.now()});
   S.formData={category:"",title:"",content:"",tags:""};
-  S.showAddForm=false;saveKB();notif("✅ تمت الإضافة بنجاح");
+  S.showAddForm=false; saveKB(); notif("✅ تمت الإضافة");
 }
 function delEntry(id){
-  if(!confirm("هل أنت متأكد من الحذف؟"))return;
-  S.knowledge=S.knowledge.filter(k=>k.id!==id);saveKB();notif("🗑️ تم الحذف");
+  if(!confirm("حذف هذا العنصر؟")) return;
+  S.knowledge=S.knowledge.filter(k=>k.id!==id); saveKB(); notif("🗑️ تم الحذف"); render();
 }
-function saveEdit2(){
+function saveEdit(){
   const i=S.knowledge.findIndex(k=>k.id===S.editEntry.id);
-  if(i!==-1)S.knowledge[i]={...S.editEntry};
-  S.editEntry=null;saveKB();notif("✅ تم الحفظ بنجاح");
+  if(i!==-1) S.knowledge[i]={...S.editEntry};
+  S.editEntry=null; saveKB(); notif("✅ تم الحفظ"); render();
 }
-function exportJSON(){
-  const b=new Blob([JSON.stringify(S.knowledge,null,2)],{type:"application/json"});
-  const a=document.createElement("a");a.href=URL.createObjectURL(b);
-  a.download="rescue_knowledge.json";a.click();notif("📥 تم التصدير");
-}
-function importJSON(e){
-  const f=e.target.files[0];if(!f)return;
-  const r=new FileReader();
-  r.onload=ev=>{try{S.knowledge=JSON.parse(ev.target.result);saveKB();notif("📤 تم الاستيراد بنجاح");}
-  catch{notif("❌ ملف غير صالح");}};r.readAsText(f);
-}
-function cats(){return["الكل",...new Set(S.knowledge.map(k=>k.category))];}
-function filtered(){return S.filterCat==="الكل"?S.knowledge:S.knowledge.filter(k=>k.category===S.filterCat);}
-function esc(s){if(!s)return"";return String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;");}
-function rfv(id){return document.getElementById(id)?.value||"";}
 
-// ══════════ بناء HTML ══════════
-function render(){
-  document.getElementById("root").innerHTML=html();
-  events();
+// ── NOTIF ────────────────────────────────────────
+function notif(m){
+  if(S.notifTimer) clearTimeout(S.notifTimer);
+  S.notif=m; render();
+  S.notifTimer=setTimeout(()=>{S.notif="";render();},3000);
 }
-function html(){
-  return`${S.notification?`<div class="notif">${S.notification}</div>`:""}
-  <div class="header">
-    <div class="header-logo">
-      <div class="anchor">⚓</div>
-      <div>
-        <div class="header-title">مركز معرفة الإنقاذ البحري الجوي</div>
-        <div class="header-sub">NAVAL AVIATION RESCUE SWIMMING · KB v1.0</div>
+
+// ── ESC ─────────────────────────────────────────
+function esc(s){ if(!s) return ""; return String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;"); }
+function gv(id){ return document.getElementById(id)?.value||""; }
+
+// ═══════════════════ RENDER ═══════════════════════
+
+function render(){ document.getElementById("root").innerHTML = buildHTML(); ev(); }
+
+function buildHTML(){
+  return `
+    ${S.notif?`<div class="notif">${S.notif}</div>`:""}
+    ${S.showMoveModal ? buildMoveModal() : ""}
+    <div class="header">
+      <div class="hlogo">
+        <div class="anchor">⚓</div>
+        <div>
+          <div class="htitle">مركز معرفة الإنقاذ البحري الجوي</div>
+          <div class="hsub">NAVAL AVIATION RESCUE SWIMMING · KB v2.0</div>
+        </div>
+      </div>
+      <div class="nav">
+        <div class="sdot"></div>
+        <button class="nb ${S.view==='chat'?'act':''}" id="nv-chat">💬 محادثة</button>
+        <button class="nb ${S.view==='files'?'act':''}" id="nv-files">📁 الملفات</button>
+        ${S.adminAuth
+          ? `<button class="nb ${S.view==='admin'?'act':''}" id="nv-admin">⚙️ إدارة</button><button class="nb" id="nv-out">خروج</button>`
+          : `<button class="nb ${S.view==='login'?'act':''}" id="nv-login">🔐 المعلم</button>`
+        }
       </div>
     </div>
-    <div class="nav">
-      <div class="status-dot"></div>
-      ${S.view==="chat"?`<button class="nav-btn active">💬 المحادثة</button><button class="nav-btn" id="bn-adm">🔐 الإدارة</button>`:
-        S.view==="login"?`<button class="nav-btn" id="bn-back">← رجوع</button>`:
-        `<button class="nav-btn" id="bn-exp">📤 تصدير</button><label class="nav-btn" style="cursor:pointer">📥 استيراد<input type="file" accept=".json" id="imp-file" style="display:none"></label><button class="nav-btn" id="bn-out">خروج</button>`}
-    </div>
-  </div>
-  <div class="main">${S.view==="chat"?chatHTML():S.view==="login"?loginHTML():adminHTML()}</div>`;
+    <div class="main">
+      ${S.view==="chat"  ? buildChat()  : ""}
+      ${S.view==="files" ? buildFiles() : ""}
+      ${S.view==="login" ? buildLogin() : ""}
+      ${S.view==="admin" ? buildAdmin() : ""}
+    </div>`;
 }
 
-function chatHTML(){
-  const msgs=S.messages.map(m=>`<div class="msg-row ${m.role}">
-    <div class="avatar ${m.role==="user"?"user":"bot"}">${m.role==="user"?"👤":"⚓"}</div>
-    <div class="bubble ${m.role==="user"?"user":"bot"}">${esc(m.content)}</div>
-  </div>`).join("");
-  const typing=S.loading?`<div class="msg-row bot"><div class="avatar bot">⚓</div>
-    <div class="bubble bot typing"><div class="dot"></div><div class="dot"></div><div class="dot"></div></div></div>`:"";
-  const welcome=S.messages.length===0?`<div style="text-align:center;padding:30px 16px;direction:rtl">
-    <div style="font-size:48px;margin-bottom:12px;filter:drop-shadow(0 0 16px #c8a05060)">⚓</div>
-    <div style="font-size:16px;font-weight:700;color:#c8a050;margin-bottom:8px">مركز معرفة الإنقاذ البحري الجوي</div>
-    <div style="font-size:13px;color:#5a7a9a;line-height:1.7;max-width:380px;margin:0 auto">
-      اسألني عن أي إجراء إنقاذ، معدة، بروتوكول طبي، أو مهارة.<br>
-      <span style="font-size:11px;font-family:monospace;color:#3a5a7a">Ask about rescue procedures, equipment, or protocols.</span>
+// ── CHAT HTML ────────────────────────────────────
+function buildChat(){
+  const fileCount = S.files.length;
+  const kbCount   = S.knowledge.length;
+  const msgs = S.msgs.map(m=>`
+    <div class="mr ${m.r}">
+      <div class="av ${m.r==='user'?'user':'bot'}">${m.r==='user'?'👤':'⚓'}</div>
+      <div class="bub ${m.r==='user'?'user':'bot'}">${esc(m.t)}</div>
+    </div>`).join("");
+  const typing = S.loading?`<div class="mr bot"><div class="av bot">⚓</div><div class="bub bot typing"><div class="dot"></div><div class="dot"></div><div class="dot"></div></div></div>`:"";
+  const welcome = S.msgs.length===0?`<div class="welcome">
+    <div class="wicon">⚓</div>
+    <div class="wtitle">مركز معرفة الإنقاذ البحري الجوي</div>
+    <div class="wsub">اسألني أي سؤال عن الإنقاذ البحري الجوي.<br>
+      ${fileCount>0?`يوجد <b style="color:var(--gold)">${fileCount} ملف</b> و<b style="color:var(--gold)">${kbCount} عنصر</b> في قاعدة المعرفة.`:`<span style="color:#c8a05080">لم يُرفع أي ملف بعد — اذهب لتبويب الملفات لرفع مراجعك.</span>`}
     </div>
-    <div style="display:flex;gap:8px;justify-content:center;flex-wrap:wrap;margin-top:18px">
-      ${["ما هو تسلسل الإنقاذ؟","معدات سباح الإنقاذ","كيف أجري CPR للغريق؟","إشارات اليد مع الطائرة"].map(q=>`<button class="nav-btn qq" data-q="${q}">${q}</button>`).join("")}
+    <div class="wqs">
+      ${["ما هو تسلسل الإنقاذ؟","What equipment does a rescue swimmer need?","كيف أجري CPR للغريق؟","متى أستخدم إشارة ABORT؟"].map(q=>
+        `<button class="nb qq" data-q="${q}">${q}</button>`).join("")}
     </div></div>`:"";
-  return`<div class="chat-wrap">
-    <div class="stats"><div class="stat">📚 قاعدة المعرفة: <b>${S.knowledge.length}</b> عنصر</div><div class="stat">💬 الرسائل: <b>${S.messages.length}</b></div></div>
-    <div class="messages" id="msg-box">${welcome}${msgs}${typing}<div id="msg-end"></div></div>
-    <div class="input-area">
-      <textarea class="chat-input" id="ci" placeholder="اكتب سؤالك هنا... / Type your question here..." rows="1" dir="auto" ${S.loading?"disabled":""}>${esc(S.input)}</textarea>
-      <button class="send-btn" id="sb" ${S.loading||!S.input.trim()?"disabled":""}>✈</button>
+  return `<div class="chat-wrap">
+    <div class="sbar">
+      <div class="si">📁 الملفات: <b>${fileCount}</b></div>
+      <div class="si">📚 قاعدة المعرفة: <b>${kbCount}</b></div>
+      <div class="si">💬 الرسائل: <b>${S.msgs.length}</b></div>
+    </div>
+    <div class="msgs" id="msgs">${welcome}${msgs}${typing}<div id="me"></div></div>
+    <div class="iarea">
+      <textarea class="ci" id="ci" placeholder="اكتب سؤالك... / Ask anything..." rows="1" dir="auto" ${S.loading?"disabled":""}>${esc(S.inp)}</textarea>
+      <button class="sbtn" id="sbtn" ${S.loading||!S.inp.trim()?"disabled":""}>✈</button>
     </div></div>`;
 }
 
-function loginHTML(){return`<div class="login-wrap"><div class="login-card">
-  <div class="login-icon">🔐</div>
-  <div class="login-title">لوحة التحكم</div>
-  <div class="login-sub">INSTRUCTOR CONTROL PANEL</div>
-  <input class="login-input" id="pi" type="password" placeholder="كلمة المرور / Password" value="${esc(S.pwInput)}" dir="auto">
-  ${S.pwError?`<div class="login-err">${S.pwError}</div>`:""}
-  <button class="login-btn" id="lb">دخول / Login</button>
-  <div style="margin-top:16px;font-size:11px;color:#3a5a7a;font-family:monospace">للمدربين فقط · Instructors Only</div>
-</div></div>`;}
+// ── FILES HTML ───────────────────────────────────
+function buildFiles(){
+  const shown = filtered();
+  const selCount = [...S.selected].filter(id=>shown.find(f=>f.id===id)).length;
+  const cards = shown.map(f=>{
+    const sel = S.selected.has(f.id);
+    return `<div class="fcard ${sel?'selected':''}" data-id="${f.id}">
+      <div class="fcard-check">${sel?'✓':''}</div>
+      <div class="fcard-icon">${fileIcon(f.file_type)}</div>
+      <div class="fcard-name">${esc(f.original_name)}</div>
+      <span class="fcard-badge">${esc(f.category||'غير مصنف')}</span>
+      <div class="fcard-size">${fmtSize(f.file_size)} · ${fmtDate(f.created_at)}</div>
+      ${f.extracted_text?`<div class="fcard-ext">✅ نص مستخرج</div>`:`<div class="fcard-ext" style="color:#5a7a9a">— لا نص</div>`}
+      <div style="display:flex;gap:5px;margin-top:4px">
+        ${f.public_url?`<a href="${f.public_url}" target="_blank" class="btn bo bsm" onclick="event.stopPropagation()">👁️ فتح</a>`:""}
+        <button class="btn bd bsm del-single" data-id="${f.id}" onclick="event.stopPropagation()">🗑️</button>
+      </div>
+    </div>`;
+  }).join("");
 
-function adminHTML(){
-  const list=filtered().map(k=>`<div class="card">
-    <div class="card-header">
-      <div style="flex:1">
-        <span class="card-badge">${esc(k.category||"غير مصنف")}</span>
-        <div class="card-title">${esc(k.title)}</div>
-        <div class="card-content">${esc(k.content.length>120?k.content.substring(0,120)+"...":k.content)}</div>
-        ${k.tags?`<div class="card-tags">${k.tags.split(",").map(t=>`<span class="tag">${esc(t.trim())}</span>`).join("")}</div>`:""}
+  return `<div class="files-wrap">
+    <div class="ftop">
+      <div class="ftop-row">
+        <div class="ftitle">📁 مكتبة الملفات <span style="font-size:12px;color:var(--muted);font-family:monospace">(${S.files.length} ملف)</span></div>
+        <div class="faction-row">
+          ${S.filesLoading?`<div class="spin"></div>`:""}
+          <button class="btn bg" id="reload-files">🔄 تحديث</button>
+        </div>
       </div>
-      <div class="card-actions">
-        <button class="btn btn-outline btn-sm eb" data-id="${k.id}">✏️</button>
-        <button class="btn btn-danger btn-sm db" data-id="${k.id}">🗑️</button>
-      </div>
-    </div></div>`).join("");
-  const af=S.showAddForm?formHTML(S.formData,false):"";
-  const ef=S.editEntry?formHTML(S.editEntry,true):"";
-  return`<div class="admin-wrap">
-    <div class="admin-top">
-      <div><div class="admin-title">إدارة قاعدة المعرفة</div>
-        <div class="admin-count">KNOWLEDGE BASE · ${S.knowledge.length} ENTRIES</div></div>
-      <div class="action-row"><button class="btn btn-gold" id="ab">+ إضافة</button></div>
     </div>
-    <div class="cats">${cats().map(c=>`<button class="cat-btn ${S.filterCat===c?"active":""} cf" data-cat="${c}">${c}</button>`).join("")}</div>
-    ${af}${ef}${list||`<div class="empty"><div class="empty-icon">📭</div>لا توجد عناصر</div>`}
-  </div>`;}
 
-function formHTML(d,isEdit){return`<div class="card form-card">
-  <div class="form-title">${isEdit?"✏️ تعديل العنصر":"➕ إضافة عنصر جديد"}</div>
-  <div class="form-group"><label class="form-label">التصنيف / Category</label>
-    <input class="form-input" id="fc" value="${esc(d.category||"")}" placeholder="مثال: إجراءات الإنقاذ"></div>
-  <div class="form-group"><label class="form-label">العنوان / Title *</label>
-    <input class="form-input" id="ft" value="${esc(d.title||"")}" placeholder="عنوان واضح ومحدد"></div>
-  <div class="form-group"><label class="form-label">المحتوى / Content *</label>
-    <textarea class="form-input" id="fco" rows="5" placeholder="المحتوى بالعربية والإنجليزي">${esc(d.content||"")}</textarea></div>
-  <div class="form-group"><label class="form-label">الكلمات المفتاحية / Tags</label>
-    <input class="form-input" id="ftg" value="${esc(d.tags||"")}" placeholder="rescue, إنقاذ, procedure"></div>
-  <div class="form-row">
-    <button class="btn btn-outline" id="cf-cancel">إلغاء</button>
-    <button class="btn btn-gold" id="${isEdit?"se-btn":"sa-btn"}">${isEdit?"💾 حفظ التعديل":"✅ إضافة"}</button>
-  </div></div>`;}
+    <div class="upzone ${S.drag?'drag':''}" id="upzone">
+      <input type="file" id="file-input" multiple accept=".pdf,.jpg,.jpeg,.png,.gif,.webp,.ppt,.pptx,.doc,.docx,.xls,.xlsx,.mp4,.mov">
+      <div class="upzone-icon">📂</div>
+      <div class="upzone-text">
+        <b>اسحب ملفاتك هنا أو اضغط للاختيار</b><br>
+        PDF · صور · PPT · Word · Excel · فيديو
+      </div>
+    </div>
 
-// ══════════ الأحداث ══════════
-function events(){
-  const g=id=>document.getElementById(id);
-  // Nav
-  g("bn-adm")?.addEventListener("click",()=>{S.view="login";S.pwInput="";S.pwError="";render();});
-  g("bn-back")?.addEventListener("click",()=>{S.view="chat";render();});
-  g("bn-exp")?.addEventListener("click",exportJSON);
-  g("bn-out")?.addEventListener("click",logout);
-  g("imp-file")?.addEventListener("change",importJSON);
-  // Login
-  const pi=g("pi");
-  if(pi){pi.addEventListener("input",e=>S.pwInput=e.target.value);
-    pi.addEventListener("keydown",e=>{if(e.key==="Enter")login();});setTimeout(()=>pi.focus(),50);}
-  g("lb")?.addEventListener("click",login);
-  // Chat
-  const ci=g("ci");
-  if(ci){
-    ci.addEventListener("input",e=>{
-      S.input=e.target.value;
-      const sb=g("sb");if(sb)sb.disabled=S.loading||!S.input.trim();
-      ci.style.height="auto";ci.style.height=Math.min(ci.scrollHeight,120)+"px";
-    });
-    ci.addEventListener("keydown",e=>{if(e.key==="Enter"&&!e.shiftKey){e.preventDefault();send();}});
-    if(!S.loading)setTimeout(()=>ci.focus(),50);
-  }
-  g("sb")?.addEventListener("click",send);
-  document.querySelectorAll(".qq").forEach(b=>b.addEventListener("click",()=>{S.input=b.dataset.q;render();setTimeout(send,50);}));
-  // Admin
-  g("ab")?.addEventListener("click",()=>{S.showAddForm=!S.showAddForm;S.editEntry=null;S.formData={category:"",title:"",content:"",tags:""};render();});
-  g("cf-cancel")?.addEventListener("click",()=>{S.showAddForm=false;S.editEntry=null;render();});
-  g("sa-btn")?.addEventListener("click",()=>{S.formData={category:rfv("fc"),title:rfv("ft"),content:rfv("fco"),tags:rfv("ftg")};addEntry();});
-  g("se-btn")?.addEventListener("click",()=>{S.editEntry={...S.editEntry,category:rfv("fc"),title:rfv("ft"),content:rfv("fco"),tags:rfv("ftg")};saveEdit2();});
-  document.querySelectorAll(".eb").forEach(b=>b.addEventListener("click",()=>{
-    S.editEntry={...S.knowledge.find(k=>k.id===Number(b.dataset.id))};S.showAddForm=false;render();
-    setTimeout(()=>g("ft")?.scrollIntoView({behavior:"smooth"}),50);
-  }));
-  document.querySelectorAll(".db").forEach(b=>b.addEventListener("click",()=>delEntry(Number(b.dataset.id))));
-  document.querySelectorAll(".cf").forEach(b=>b.addEventListener("click",()=>{S.filterCat=b.dataset.cat;render();}));
+    ${S.uploading||S.uploadLabel?`
+      <div class="prog-bar"><div class="prog-fill" style="width:${S.uploadPct}%"></div></div>
+      <div class="prog-label">${esc(S.uploadLabel)}</div>`:""
+    }
+
+    <div class="cats">
+      ${allCats().map(c=>`<button class="cb ${S.filterCat===c?'act':''} cat-f" data-cat="${c}">${c}</button>`).join("")}
+    </div>
+
+    ${S.selected.size>0?`
+      <div class="selbar">
+        <span>✓ تم تحديد ${S.selected.size} ملف</span>
+        <button class="btn bg bsm" id="sel-all">${selCount===shown.length?'إلغاء الكل':'تحديد الكل'}</button>
+        <button class="btn bo bsm" id="move-btn">📂 نقل لتصنيف</button>
+        <button class="btn bd bsm" id="del-sel">🗑️ حذف المحدد</button>
+      </div>`:
+      `<div style="padding:0 18px 6px;direction:rtl">
+        <button class="btn bo bsm" id="sel-all">☑️ تحديد الكل</button>
+      </div>`
+    }
+
+    <div class="fgrid" id="fgrid">
+      ${S.filesLoading
+        ? `<div class="empty"><div class="ei">⏳</div>جارٍ التحميل...</div>`
+        : shown.length===0
+          ? `<div class="empty"><div class="ei">📭</div>${S.filterCat==="الكل"?"لم يُرفع أي ملف بعد<br><small>ارفع ملفاتك من المنطقة أعلاه</small>":"لا توجد ملفات في هذا التصنيف"}</div>`
+          : cards
+      }
+    </div>
+  </div>`;
 }
 
-window.onload=render;
+// ── MOVE MODAL ───────────────────────────────────
+function buildMoveModal(){
+  return `<div class="overlay" id="overlay">
+    <div class="modal">
+      <div class="modal-title">📂 نقل ${S.selected.size} ملف إلى تصنيف</div>
+      <div class="fg">
+        <label class="fl">اختر التصنيف</label>
+        <select class="fi" id="move-cat-sel">
+          <option value="">-- اختر --</option>
+          ${DEFAULT_CATS.map(c=>`<option value="${c}" ${S.moveCat===c?'selected':''}>${c}</option>`).join('')}
+        </select>
+      </div>
+      <div class="modal-btns">
+        <button class="btn bo" id="cancel-move">إلغاء</button>
+        <button class="btn bg" id="confirm-move">نقل ✓</button>
+      </div>
+    </div>
+  </div>`;
+}
+
+// ── LOGIN HTML ───────────────────────────────────
+function buildLogin(){
+  return `<div class="lw"><div class="lc">
+    <div class="li2">🔐</div>
+    <div class="lt">لوحة التحكم</div>
+    <div class="ls">INSTRUCTOR CONTROL PANEL</div>
+    <input class="lin" id="pi" type="password" placeholder="كلمة المرور / Password" value="${esc(S.pw)}">
+    ${S.pwErr?`<div class="lerr">${S.pwErr}</div>`:""}
+    <button class="lbtn" id="lbtn">دخول / Login</button>
+    <div style="margin-top:14px;font-size:11px;color:#3a5a7a;font-family:monospace">للمدربين فقط · Instructors Only</div>
+  </div></div>`;
+}
+
+// ── ADMIN HTML ───────────────────────────────────
+function buildAdmin(){
+  const list = S.knowledge.map(k=>`
+    <div class="acard">
+      <div class="ach">
+        <div style="flex:1">
+          <span class="abadge">${esc(k.category||'عام')}</span>
+          <div class="act-title">${esc(k.title)}</div>
+          <div class="act-content">${esc(k.content.length>130?k.content.substring(0,130)+"...":k.content)}</div>
+          ${k.tags?`<div class="atags">${k.tags.split(",").map(t=>`<span class="tag">${esc(t.trim())}</span>`).join('')}</div>`:""}
+        </div>
+        <div class="aactions">
+          <button class="btn bo bsm ae" data-id="${k.id}">✏️</button>
+          <button class="btn bd bsm ad" data-id="${k.id}">🗑️</button>
+        </div>
+      </div>
+    </div>`).join('');
+
+  const af = S.showAddForm ? buildForm(S.formData, false) : '';
+  const ef = S.editEntry   ? buildForm(S.editEntry, true) : '';
+
+  return `<div class="admin-wrap">
+    <div class="atop">
+      <div><div class="atitle">⚙️ إدارة قاعدة المعرفة</div>
+        <div class="acount">TEXT ENTRIES · ${S.knowledge.length}</div></div>
+      <div style="display:flex;gap:8px">
+        <button class="btn bg" id="aa-btn">+ إضافة</button>
+        <button class="btn bo" id="exp-btn">📤 تصدير</button>
+      </div>
+    </div>
+    ${af}${ef}
+    ${list||`<div class="empty" style="padding:40px"><div class="ei">📭</div>لا توجد عناصر مكتوبة — الملفات المرفوعة تُستخدم تلقائياً</div>`}
+  </div>`;
+}
+
+function buildForm(d, isEdit){
+  return `<div class="acard fc">
+    <div class="form-title">${isEdit?'✏️ تعديل العنصر':'➕ إضافة نص جديد'}</div>
+    <div class="fg"><label class="fl">التصنيف</label>
+      <input class="fi" id="fc" value="${esc(d.category||'')}" placeholder="مثال: إجراءات الإنقاذ"></div>
+    <div class="fg"><label class="fl">العنوان *</label>
+      <input class="fi" id="ft" value="${esc(d.title||'')}" placeholder="عنوان واضح ومحدد"></div>
+    <div class="fg"><label class="fl">المحتوى *</label>
+      <textarea class="fi" id="fco" rows="5">${esc(d.content||'')}</textarea></div>
+    <div class="fg"><label class="fl">الكلمات المفتاحية (مفصولة بفواصل)</label>
+      <input class="fi" id="ftg" value="${esc(d.tags||'')}" placeholder="rescue, إنقاذ, CPR"></div>
+    <div class="fr">
+      <button class="btn bo" id="cf-cancel">إلغاء</button>
+      <button class="btn bg" id="${isEdit?'se-btn':'sa-btn'}">${isEdit?'💾 حفظ':'✅ إضافة'}</button>
+    </div>
+  </div>`;
+}
+
+// ═══════════════════ EVENTS ═══════════════════════
+function ev(){
+  const g = id => document.getElementById(id);
+
+  // NAV
+  g("nv-chat")?.addEventListener("click",()=>{ S.view="chat"; render(); });
+  g("nv-files")?.addEventListener("click",()=>{ S.view="files"; if(!S.files.length) loadFiles(); else render(); });
+  g("nv-login")?.addEventListener("click",()=>{ S.view="login"; S.pw=""; S.pwErr=""; render(); });
+  g("nv-admin")?.addEventListener("click",()=>{ S.view="admin"; render(); });
+  g("nv-out")?.addEventListener("click",()=>{ S.adminAuth=false; S.view="chat"; render(); });
+
+  // LOGIN
+  const pi = g("pi");
+  if(pi){
+    pi.addEventListener("input",e=>S.pw=e.target.value);
+    pi.addEventListener("keydown",e=>{ if(e.key==="Enter") doLogin(); });
+    setTimeout(()=>pi.focus(),50);
+  }
+  g("lbtn")?.addEventListener("click",doLogin);
+
+  // CHAT
+  const ci = g("ci");
+  if(ci){
+    ci.addEventListener("input",e=>{
+      S.inp=e.target.value;
+      const sb=g("sbtn"); if(sb) sb.disabled=S.loading||!S.inp.trim();
+      ci.style.height="auto"; ci.style.height=Math.min(ci.scrollHeight,120)+"px";
+    });
+    ci.addEventListener("keydown",e=>{ if(e.key==="Enter"&&!e.shiftKey){e.preventDefault();sendMsg();} });
+    if(!S.loading) setTimeout(()=>ci.focus(),50);
+  }
+  g("sbtn")?.addEventListener("click",sendMsg);
+  document.querySelectorAll(".qq").forEach(b=>b.addEventListener("click",()=>{ S.inp=b.dataset.q; render(); setTimeout(sendMsg,50); }));
+
+  // FILES
+  const fi = g("file-input");
+  if(fi) fi.addEventListener("change",e=>uploadFiles(e.target.files));
+
+  const uz = g("upzone");
+  if(uz){
+    uz.addEventListener("dragover",e=>{ e.preventDefault(); S.drag=true; render(); });
+    uz.addEventListener("dragleave",()=>{ S.drag=false; render(); });
+    uz.addEventListener("drop",e=>{ e.preventDefault(); S.drag=false; uploadFiles(e.dataTransfer.files); });
+  }
+
+  g("reload-files")?.addEventListener("click",loadFiles);
+  g("sel-all")?.addEventListener("click",selAll);
+  g("del-sel")?.addEventListener("click",deleteSelected);
+  g("move-btn")?.addEventListener("click",()=>{ S.showMoveModal=true; render(); });
+
+  // Move modal
+  g("cancel-move")?.addEventListener("click",()=>{ S.showMoveModal=false; render(); });
+  g("overlay")?.addEventListener("click",e=>{ if(e.target.id==="overlay"){ S.showMoveModal=false; render(); } });
+  g("move-cat-sel")?.addEventListener("change",e=>S.moveCat=e.target.value);
+  g("confirm-move")?.addEventListener("click",moveSelected);
+
+  // File cards
+  document.querySelectorAll(".fcard").forEach(card=>{
+    card.addEventListener("click",()=>toggleSel(card.dataset.id));
+  });
+  document.querySelectorAll(".cat-f").forEach(b=>{
+    b.addEventListener("click",()=>{ S.filterCat=b.dataset.cat; render(); });
+  });
+  document.querySelectorAll(".del-single").forEach(b=>{
+    b.addEventListener("click",()=>deleteFile(b.dataset.id));
+  });
+
+  // ADMIN
+  g("aa-btn")?.addEventListener("click",()=>{ S.showAddForm=!S.showAddForm; S.editEntry=null; S.formData={category:"",title:"",content:"",tags:""}; render(); });
+  g("exp-btn")?.addEventListener("click",()=>{
+    const blob=new Blob([JSON.stringify(S.knowledge,null,2)],{type:"application/json"});
+    const a=document.createElement("a"); a.href=URL.createObjectURL(blob); a.download="kb.json"; a.click();
+    notif("📥 تم التصدير");
+  });
+  g("cf-cancel")?.addEventListener("click",()=>{ S.showAddForm=false; S.editEntry=null; render(); });
+  g("sa-btn")?.addEventListener("click",()=>{ S.formData={category:gv("fc"),title:gv("ft"),content:gv("fco"),tags:gv("ftg")}; addEntry(); });
+  g("se-btn")?.addEventListener("click",()=>{ S.editEntry={...S.editEntry,category:gv("fc"),title:gv("ft"),content:gv("fco"),tags:gv("ftg")}; saveEdit(); });
+  document.querySelectorAll(".ae").forEach(b=>b.addEventListener("click",()=>{
+    S.editEntry={...S.knowledge.find(k=>k.id===Number(b.dataset.id))}; S.showAddForm=false; render();
+    setTimeout(()=>g("ft")?.scrollIntoView({behavior:"smooth"}),60);
+  }));
+  document.querySelectorAll(".ad").forEach(b=>b.addEventListener("click",()=>delEntry(Number(b.dataset.id))));
+}
+
+function doLogin(){
+  if(S.pw===ADMIN_PW){ S.adminAuth=true; S.pwErr=""; S.view="admin"; render(); }
+  else { S.pwErr="كلمة المرور غير صحيحة / Wrong password"; render(); }
+}
+
+// ── INIT ─────────────────────────────────────────
+window.onload = () => { render(); };
 </script>
 </body>
 </html>
