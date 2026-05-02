@@ -5,8 +5,6 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>مركز معرفة الإنقاذ البحري الجوي</title>
 <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;500;600;700;900&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
 :root{
@@ -26,21 +24,17 @@ html,body{height:100%;background:var(--bg);font-family:'Cairo',sans-serif;color:
 .htitle{font-size:13px;font-weight:700;color:var(--gold2);line-height:1.3}
 .hsub{font-size:9px;color:var(--muted);font-family:'JetBrains Mono',monospace;letter-spacing:.5px}
 .nav{display:flex;gap:6px;align-items:center}
-.nb{padding:6px 12px;border-radius:20px;border:1px solid var(--border);background:transparent;color:var(--muted);cursor:pointer;font-size:12px;font-family:'Cairo',sans-serif;transition:all .2s;white-space:nowrap;display:flex;align-items:center;gap:5px}
+.nb{padding:6px 12px;border-radius:20px;border:1px solid var(--border);background:transparent;color:var(--muted);cursor:pointer;font-size:12px;font-family:'Cairo',sans-serif;transition:all .2s;white-space:nowrap}
 .nb:hover,.nb.act{border-color:var(--gold);color:var(--gold);background:#c8a05015}
 .sdot{width:8px;height:8px;border-radius:50%;background:var(--success);box-shadow:0 0 8px #3a9060;animation:pulse 2s infinite;flex-shrink:0}
 @keyframes pulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.6;transform:scale(1.3)}}
-
-/* MAIN */
 .main{flex:1;overflow:hidden;display:flex;flex-direction:column;min-height:0}
-
-/* STATS BAR */
-.sbar{display:flex;gap:16px;padding:8px 18px;background:var(--surface);border-bottom:1px solid var(--border2);flex-shrink:0;direction:rtl;flex-wrap:wrap}
-.si{display:flex;align-items:center;gap:5px;font-size:11px;color:var(--muted)}
-.si b{color:var(--gold);font-family:'JetBrains Mono',monospace}
 
 /* CHAT */
 .chat-wrap{display:flex;flex-direction:column;height:100%;overflow:hidden;min-height:0}
+.sbar{display:flex;gap:16px;padding:8px 18px;background:var(--surface);border-bottom:1px solid var(--border2);flex-shrink:0;direction:rtl;flex-wrap:wrap}
+.si{display:flex;align-items:center;gap:5px;font-size:11px;color:var(--muted)}
+.si b{color:var(--gold);font-family:'JetBrains Mono',monospace}
 .msgs{flex:1;overflow-y:auto;padding:20px;display:flex;flex-direction:column;gap:14px;scroll-behavior:smooth;min-height:0}
 .msgs::-webkit-scrollbar{width:4px}
 .msgs::-webkit-scrollbar-thumb{background:var(--border);border-radius:2px}
@@ -50,7 +44,7 @@ html,body{height:100%;background:var(--bg);font-family:'Cairo',sans-serif;color:
 .av{width:34px;height:34px;border-radius:50%;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:14px;border:1px solid var(--border)}
 .av.bot{background:radial-gradient(#c8a05020,#c8a05005);border-color:#c8a05040}
 .av.user{background:radial-gradient(#1a3a6a,#112050);border-color:#2a4a8a}
-.bub{max-width:78%;padding:11px 15px;font-size:13.5px;line-height:1.75;white-space:pre-wrap;word-break:break-word;border-radius:4px 18px 18px 18px;border:1px solid var(--border2);background:var(--bot);position:relative}
+.bub{max-width:78%;padding:11px 15px;font-size:13.5px;line-height:1.8;white-space:pre-wrap;word-break:break-word;border-radius:4px 18px 18px 18px;border:1px solid var(--border2);background:var(--bot);position:relative}
 .bub.user{border-radius:18px 4px 18px 18px;background:var(--user);border-color:#1e3a6a;text-align:right}
 .bub.bot::before{content:'';position:absolute;right:-1px;top:0;bottom:0;width:2px;background:linear-gradient(180deg,var(--gold),transparent);border-radius:1px}
 .typing{display:flex;align-items:center;gap:6px;padding:12px 18px}
@@ -64,75 +58,69 @@ html,body{height:100%;background:var(--bg);font-family:'Cairo',sans-serif;color:
 .sbtn{width:44px;height:44px;flex-shrink:0;background:linear-gradient(135deg,var(--gold),#a07830);border:none;border-radius:12px;cursor:pointer;font-size:17px;display:flex;align-items:center;justify-content:center;transition:all .15s;color:#fff}
 .sbtn:hover:not(:disabled){transform:scale(1.06)}
 .sbtn:disabled{opacity:.4;cursor:not-allowed}
+.welcome{text-align:center;padding:28px 16px;direction:rtl}
+.wicon{font-size:44px;margin-bottom:10px;filter:drop-shadow(0 0 16px #c8a05060)}
+.wtitle{font-size:15px;font-weight:700;color:#c8a050;margin-bottom:8px}
+.wsub{font-size:13px;color:#5a7a9a;line-height:1.7;max-width:380px;margin:0 auto 16px}
+.wqs{display:flex;gap:7px;justify-content:center;flex-wrap:wrap}
 
-/* FILES VIEW */
-.files-wrap{display:flex;flex-direction:column;height:100%;overflow:hidden;min-height:0}
-.ftop{padding:14px 18px 0;flex-shrink:0;direction:rtl}
-.ftop-row{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;gap:10px;flex-wrap:wrap}
-.ftitle{font-size:15px;font-weight:700;color:var(--gold2)}
-.faction-row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
-
-/* UPLOAD ZONE */
-.upzone{
-  border:2px dashed var(--border);border-radius:14px;
-  padding:24px 16px;text-align:center;cursor:pointer;
-  transition:all .25s;margin:0 18px 14px;flex-shrink:0;
-  background:#07142a80;position:relative;overflow:hidden;
-}
+/* FILES — instructor only */
+.files-wrap{display:flex;height:100%;overflow:hidden;min-height:0}
+/* SIDEBAR FOLDERS */
+.fsidebar{width:200px;flex-shrink:0;background:var(--surface);border-left:1px solid var(--border2);display:flex;flex-direction:column;overflow:hidden}
+.fsidebar-top{padding:14px 12px 10px;border-bottom:1px solid var(--border2);flex-shrink:0}
+.fsidebar-title{font-size:12px;font-weight:700;color:var(--gold2);margin-bottom:10px;direction:rtl}
+.folder-item{display:flex;align-items:center;justify-content:space-between;padding:8px 10px;border-radius:8px;cursor:pointer;transition:all .15s;direction:rtl;gap:6px}
+.folder-item:hover{background:#c8a05010}
+.folder-item.act{background:#c8a05018;border:1px solid #c8a05040}
+.folder-item.act .fn{color:var(--gold)}
+.fn{font-size:12px;color:var(--text);flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.fcount{font-size:10px;color:var(--muted);font-family:'JetBrains Mono',monospace;flex-shrink:0}
+.folder-actions{display:flex;gap:3px;opacity:0;transition:opacity .15s}
+.folder-item:hover .folder-actions{opacity:1}
+.icon-btn{width:20px;height:20px;border:none;background:transparent;color:var(--muted);cursor:pointer;font-size:11px;border-radius:3px;display:flex;align-items:center;justify-content:center;transition:all .15s}
+.icon-btn:hover{background:var(--border);color:var(--text)}
+.folders-list{flex:1;overflow-y:auto;padding:8px}
+.folders-list::-webkit-scrollbar{width:3px}
+.folders-list::-webkit-scrollbar-thumb{background:var(--border)}
+/* MAIN FILE AREA */
+.fmain{flex:1;display:flex;flex-direction:column;overflow:hidden;min-height:0}
+.fmain-top{padding:12px 16px;border-bottom:1px solid var(--border2);flex-shrink:0;direction:rtl;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px}
+.fmain-title{font-size:13px;font-weight:700;color:var(--gold2)}
+.fmain-actions{display:flex;gap:6px;flex-wrap:wrap;align-items:center}
+/* UPLOAD */
+.upzone{border:2px dashed var(--border);border-radius:12px;padding:20px 14px;text-align:center;cursor:pointer;transition:all .25s;margin:12px 14px;flex-shrink:0;background:#07142a80;position:relative;overflow:hidden}
 .upzone:hover,.upzone.drag{border-color:var(--gold);background:#c8a05008}
-.upzone-icon{font-size:32px;margin-bottom:8px}
-.upzone-text{font-size:13px;color:var(--muted);line-height:1.6}
-.upzone-text b{color:var(--gold2)}
 .upzone input{position:absolute;inset:0;opacity:0;cursor:pointer;width:100%;height:100%}
-
+.upzone-icon{font-size:28px;margin-bottom:6px}
+.upzone-text{font-size:12px;color:var(--muted);line-height:1.6}
+.upzone-text b{color:var(--gold2)}
 /* PROGRESS */
-.prog-bar{height:4px;background:var(--border2);border-radius:2px;overflow:hidden;margin:0 18px 10px;flex-shrink:0}
+.prog-wrap{padding:0 14px 6px;flex-shrink:0}
+.prog-bar{height:4px;background:var(--border2);border-radius:2px;overflow:hidden}
 .prog-fill{height:100%;background:linear-gradient(90deg,var(--gold),var(--gold2));border-radius:2px;transition:width .3s;width:0%}
-.prog-label{font-size:11px;color:var(--muted);text-align:center;margin:0 18px 8px;direction:rtl;flex-shrink:0}
-
-/* CATS */
-.cats{display:flex;gap:6px;padding:0 18px 10px;flex-wrap:wrap;flex-shrink:0;direction:rtl}
-.cb{padding:4px 14px;border-radius:14px;border:1px solid var(--border);background:transparent;color:var(--muted);cursor:pointer;font-size:12px;font-family:'Cairo',sans-serif;transition:all .2s}
-.cb.act{border-color:var(--gold);color:var(--gold);background:#c8a05015}
-
+.prog-label{font-size:11px;color:var(--muted);text-align:center;margin-top:4px;direction:rtl}
 /* SELECTION BAR */
-.selbar{
-  display:flex;align-items:center;gap:10px;padding:8px 18px;
-  background:#c8a05015;border-bottom:1px solid var(--gold)40;
-  flex-shrink:0;direction:rtl;flex-wrap:wrap
-}
+.selbar{display:flex;align-items:center;gap:8px;padding:7px 14px;background:#c8a05012;border-bottom:1px solid #c8a05030;flex-shrink:0;direction:rtl;flex-wrap:wrap}
 .selbar span{font-size:12px;color:var(--gold)}
-
 /* FILE GRID */
-.fgrid{flex:1;overflow-y:auto;padding:0 18px 18px;display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:12px;align-content:start;min-height:0}
+.fgrid{flex:1;overflow-y:auto;padding:0 14px 14px;display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:10px;align-content:start;min-height:0}
 .fgrid::-webkit-scrollbar{width:4px}
 .fgrid::-webkit-scrollbar-thumb{background:var(--border);border-radius:2px}
-
 /* FILE CARD */
-.fcard{
-  background:var(--card);border:1px solid var(--border2);border-radius:12px;
-  padding:14px;cursor:pointer;transition:all .2s;position:relative;
-  display:flex;flex-direction:column;gap:8px;direction:rtl
-}
+.fcard{background:var(--card);border:1px solid var(--border2);border-radius:10px;padding:12px;cursor:pointer;transition:all .2s;position:relative;display:flex;flex-direction:column;gap:7px;direction:rtl}
 .fcard:hover{border-color:var(--border);transform:translateY(-1px)}
-.fcard.selected{border-color:var(--gold);background:#c8a05012}
-.fcard-check{
-  position:absolute;top:10px;left:10px;width:20px;height:20px;
-  border-radius:5px;border:2px solid var(--border);background:var(--input);
-  display:flex;align-items:center;justify-content:center;font-size:12px;
-  transition:all .15s
-}
+.fcard.selected{border-color:var(--gold);background:#c8a05010}
+.fcard-check{position:absolute;top:8px;left:8px;width:18px;height:18px;border-radius:4px;border:2px solid var(--border);background:var(--input);display:flex;align-items:center;justify-content:center;font-size:11px;transition:all .15s}
 .fcard.selected .fcard-check{border-color:var(--gold);background:var(--gold);color:#000}
-.fcard-icon{font-size:32px;text-align:center}
-.fcard-name{font-size:12px;font-weight:600;color:var(--text);word-break:break-all;text-align:right}
-.fcard-badge{display:inline-block;padding:2px 8px;border-radius:8px;background:#c8a05018;border:1px solid #c8a05030;color:var(--gold);font-size:10px;align-self:flex-start}
-.fcard-size{font-size:10px;color:var(--muted)}
-.fcard-date{font-size:10px;color:var(--muted)}
-.fcard-ext{font-size:10px;color:#5a9a7a;font-family:'JetBrains Mono',monospace}
-
-/* EMPTY */
-.empty{grid-column:1/-1;text-align:center;padding:60px 20px;color:var(--muted)}
-.ei{font-size:48px;margin-bottom:12px;opacity:.3}
+.fcard-icon{font-size:28px;text-align:center}
+.fcard-name{font-size:11px;font-weight:600;color:var(--text);word-break:break-all;text-align:right;line-height:1.4}
+.fcard-folder{display:inline-block;padding:1px 8px;border-radius:8px;background:#c8a05015;color:var(--gold);font-size:10px}
+.fcard-meta{font-size:10px;color:var(--muted)}
+.fcard-txt{font-size:10px;color:#5a9a7a;font-family:'JetBrains Mono',monospace}
+.fcard-btns{display:flex;gap:4px;margin-top:2px}
+.empty-state{grid-column:1/-1;text-align:center;padding:50px 20px;color:var(--muted)}
+.empty-icon{font-size:44px;margin-bottom:10px;opacity:.3}
 
 /* ADMIN */
 .admin-wrap{flex:1;overflow-y:auto;padding:18px;direction:rtl}
@@ -140,10 +128,8 @@ html,body{height:100%;background:var(--bg);font-family:'Cairo',sans-serif;color:
 .admin-wrap::-webkit-scrollbar-thumb{background:var(--border)}
 .atop{display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;gap:10px;flex-wrap:wrap}
 .atitle{font-size:15px;font-weight:700;color:var(--gold2)}
-.acount{font-size:11px;color:var(--muted);font-family:'JetBrains Mono',monospace}
 .acard{background:var(--card);border:1px solid var(--border2);border-radius:12px;padding:14px;margin-bottom:10px;transition:border-color .2s;direction:rtl}
-.acard:hover{border-color:var(--border)}
-.acard.fc{border-color:#c8a05040;margin-bottom:16px}
+.acard:hover{border-color:var(--border)}.acard.fc{border-color:#c8a05040;margin-bottom:16px}
 .ach{display:flex;justify-content:space-between;align-items:flex-start;gap:10px}
 .abadge{display:inline-block;padding:2px 10px;border-radius:10px;background:#c8a05018;border:1px solid #c8a05030;color:var(--gold);font-size:11px;margin-bottom:6px}
 .act-title{font-size:14px;font-weight:600;color:var(--text);margin-bottom:5px}
@@ -166,7 +152,7 @@ textarea.fi{resize:vertical;min-height:90px}
 .bg{background:var(--gold);color:#000}.bg:hover{background:var(--gold2)}
 .bo{background:transparent;border:1px solid var(--border);color:var(--muted)}.bo:hover{border-color:var(--gold);color:var(--gold)}
 .bd{background:#c0585820;border:1px solid #c0585850;color:var(--danger)}.bd:hover{background:var(--danger);color:#fff}
-.bsm{padding:4px 10px;font-size:11px}
+.bsm{padding:4px 9px;font-size:11px}
 
 /* LOGIN */
 .lw{flex:1;display:flex;align-items:center;justify-content:center;padding:20px}
@@ -182,29 +168,23 @@ textarea.fi{resize:vertical;min-height:90px}
 
 /* MODAL */
 .overlay{position:fixed;inset:0;background:#00000090;z-index:100;display:flex;align-items:center;justify-content:center;padding:20px;backdrop-filter:blur(4px)}
-.modal{background:var(--card);border:1px solid var(--gold)40;border-radius:16px;padding:24px;width:100%;max-width:420px;direction:rtl}
-.modal-title{font-size:15px;font-weight:700;color:var(--gold2);margin-bottom:16px}
-.modal-btns{display:flex;gap:8px;justify-content:flex-end;margin-top:16px}
+.modal{background:var(--card);border:1px solid #c8a05040;border-radius:14px;padding:24px;width:100%;max-width:400px;direction:rtl}
+.modal-title{font-size:14px;font-weight:700;color:var(--gold2);margin-bottom:16px}
+.modal-btns{display:flex;gap:8px;justify-content:flex-end;margin-top:14px}
 
 /* NOTIF */
-.notif{position:fixed;top:16px;left:50%;transform:translateX(-50%) translateY(0);background:var(--success);color:#fff;padding:10px 22px;border-radius:10px;font-size:13px;font-weight:600;z-index:999;animation:fi .3s ease;font-family:'Cairo',sans-serif;white-space:nowrap;box-shadow:0 4px 20px #00000050}
-
-/* LOADING SPINNER */
-.spin{width:16px;height:16px;border:2px solid #c8a05040;border-top-color:var(--gold);border-radius:50%;animation:sp .6s linear infinite;flex-shrink:0}
+.notif{position:fixed;top:16px;left:50%;transform:translateX(-50%);background:var(--success);color:#fff;padding:10px 22px;border-radius:10px;font-size:13px;font-weight:600;z-index:999;animation:fi .3s ease;font-family:'Cairo',sans-serif;white-space:nowrap;box-shadow:0 4px 20px #00000050}
+.spin{width:14px;height:14px;border:2px solid #c8a05040;border-top-color:var(--gold);border-radius:50%;animation:sp .6s linear infinite}
 @keyframes sp{to{transform:rotate(360deg)}}
 
-/* WELCOME */
-.welcome{text-align:center;padding:28px 16px;direction:rtl}
-.wicon{font-size:44px;margin-bottom:10px;filter:drop-shadow(0 0 16px #c8a05060)}
-.wtitle{font-size:15px;font-weight:700;color:#c8a050;margin-bottom:8px}
-.wsub{font-size:13px;color:#5a7a9a;line-height:1.7;max-width:380px;margin:0 auto 16px}
-.wqs{display:flex;gap:7px;justify-content:center;flex-wrap:wrap}
-
-@media(max-width:580px){
-  .htitle{font-size:11px}.nb{padding:5px 9px;font-size:11px}
-  .fgrid{grid-template-columns:repeat(auto-fill,minmax(140px,1fr))}
+@media(max-width:640px){
+  .fsidebar{width:150px}.htitle{font-size:11px}
+  .nb{padding:5px 8px;font-size:11px}
+  .fgrid{grid-template-columns:repeat(auto-fill,minmax(130px,1fr))}
   .bub{max-width:88%;font-size:13px}
-  .upzone{margin:0 10px 12px;padding:18px 12px}
+}
+@media(max-width:480px){
+  .fsidebar{display:none}
 }
 </style>
 </head>
@@ -212,119 +192,125 @@ textarea.fi{resize:vertical;min-height:90px}
 <div id="root"></div>
 
 <script>
-// ═══════════════════════════════════════════════
-//  مركز معرفة الإنقاذ البحري الجوي — v2.0
-//  Naval Aviation Rescue Swimming Knowledge Base
-// ═══════════════════════════════════════════════
+// ═══════════════════════════════════════════════════════
+//   مركز معرفة الإنقاذ البحري الجوي — v3.0
+//   Naval Aviation Rescue Swimming Knowledge Base
+//   Access: Chat = everyone | Files/Admin = instructor only
+// ═══════════════════════════════════════════════════════
 
-// ── CONFIG ─────────────────────────────────────
-const SB_URL    = "https://swsrivfhyqurwxnqisso.supabase.co";
-const SB_KEY    = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InN3c3JpdmZoeXF1cnd4bnFpc3NvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzc3MTQxNjQsImV4cCI6MjA5MzI5MDE2NH0.9L1yjhX-S7gZOFuEWckVh89wHKFOexwcq0S7TY_gFwI";
-const GEM_KEY   = "AIzaSyCNcv5P2qsfXiBSG4mXveBdudOR94VqrW8";
-const ADMIN_PW  = "rescue@2024"; // ← غيّر هذا
-const BUCKET    = "files";
-
-// ── SUPABASE ────────────────────────────────────
-const sb = window.supabase.createClient(SB_URL, SB_KEY);
-
-// ── PDF.js ──────────────────────────────────────
-if(window.pdfjsLib) pdfjsLib.GlobalWorkerOptions.workerSrc =
-  "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js";
-
-// ── CATEGORIES ─────────────────────────────────
-const DEFAULT_CATS = [
-  "إجراءات الإنقاذ","المعدات والتجهيزات","الطب التطبيقي",
-  "العمليات الجوية","السلامة والمعايير","المراجع والكتب","غير مصنف"
-];
-
-// ── STATE ───────────────────────────────────────
-let S = {
-  view: "chat",              // chat | files | login | admin
-  adminAuth: false,
-  // chat
-  msgs: [], inp: "", loading: false,
-  // files
-  files: [], filesLoading: false,
-  filterCat: "الكل", selected: new Set(),
-  uploading: false, uploadPct: 0, uploadLabel: "",
-  showMoveModal: false, moveCat: "",
-  // knowledge (admin)
-  knowledge: JSON.parse(localStorage.getItem("kb_v2")||"null") || [],
-  showAddForm: false, editEntry: null,
-  formData: {category:"",title:"",content:"",tags:""},
-  // auth
-  pw: "", pwErr: "",
-  // ui
-  notif: "", notifTimer: null,
-  // drag
-  drag: false,
+const CFG = {
+  SB_URL:   "https://swsrivfhyqurwxnqisso.supabase.co",
+  SB_KEY:   "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InN3c3JpdmZoeXF1cnd4bnFpc3NvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzc3MTQxNjQsImV4cCI6MjA5MzI5MDE2NH0.9L1yjhX-S7gZOFuEWckVh89wHKFOexwcq0S7TY_gFwI",
+  GEM_KEY:  "AIzaSyCNcv5P2qsfXiBSG4mXveBdudOR94VqrW8",
+  ADMIN_PW: "rescue@2024",   // ← غيّر هذا
+  BUCKET:   "files",
 };
 
-function saveKB(){ localStorage.setItem("kb_v2", JSON.stringify(S.knowledge)); }
+// ── Supabase (lazy-loaded) ─────────────────────────────
+let sb = null;
+function getSB(){
+  if(sb) return sb;
+  try {
+    sb = window.supabase?.createClient(CFG.SB_URL, CFG.SB_KEY);
+    if(!sb) throw new Error("Supabase not loaded");
+  } catch(e){ console.error("Supabase init failed:", e); }
+  return sb;
+}
 
-// ── GEMINI ──────────────────────────────────────
+// ── PDF.js ─────────────────────────────────────────────
+function initPDF(){
+  if(window.pdfjsLib){
+    pdfjsLib.GlobalWorkerOptions.workerSrc =
+      "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js";
+  }
+}
+
+// ── STATE ──────────────────────────────────────────────
+let S = {
+  view: "chat",
+  auth: false,
+  msgs: [], inp: "", chatLoading: false,
+  files: [], filesLoading: false,
+  folders: [],
+  activeFolder: "الكل",
+  selected: new Set(),
+  uploading: false, uploadPct: 0, uploadLabel: "",
+  drag: false,
+  knowledge: JSON.parse(localStorage.getItem("kb_v3") || "null") || [],
+  showAddForm: false, editEntry: null,
+  formData: {category:"",title:"",content:"",tags:""},
+  pw: "", pwErr: "",
+  modal: null,   // { type: "folder-add" | "folder-edit" | "folder-delete" | "move", data:{} }
+  notif: "", notifTimer: null,
+};
+
+function saveKB(){ localStorage.setItem("kb_v3", JSON.stringify(S.knowledge)); }
+
+// ── GEMINI (completely independent from Supabase) ──────
 async function callGemini(question){
-  // Build context from KB entries + file extracted texts
-  const kbCtx = S.knowledge.map(k=>
+  const kbCtx = S.knowledge.map(k =>
     `[${k.category||"عام"}] ${k.title}\n${k.content}`
   ).join("\n\n---\n\n");
 
   const fileCtx = S.files
-    .filter(f => f.extracted_text && f.extracted_text.length > 10)
-    .map(f => `[ملف: ${f.original_name} | ${f.category}]\n${f.extracted_text.substring(0,2000)}`)
+    .filter(f => f.extracted_text && f.extracted_text.length > 20)
+    .map(f => `[ملف: ${f.original_name} — مجلد: ${f.category||"عام"}]\n${f.extracted_text.substring(0,2500)}`)
     .join("\n\n---\n\n");
 
-  const fullCtx = [kbCtx, fileCtx].filter(Boolean).join("\n\n═══════\n\n");
+  const ctx = [kbCtx, fileCtx].filter(Boolean).join("\n\n══════════\n\n");
 
   const sys = `أنت مساعد تعليمي متخصص حصرياً في مجال الإنقاذ البحري الجوي (Naval Aviation Rescue Swimming).
-
 القواعد الصارمة:
-١. أجب فقط عن الإنقاذ البحري الجوي. إذا كان السؤال خارج هذا المجال قل: "هذا خارج نطاق تخصصي."
-٢. لا تكشف هوية أحد أو معلومات خاصة.
-٣. لا تذكر أنك Gemini أو AI — أنت مساعد مركز المعرفة فقط.
+١. أجب فقط عن الإنقاذ البحري الجوي. إذا كان السؤال خارجاً عن هذا المجال قل بالضبط: "هذا السؤال خارج نطاق تخصصي."
+٢. لا تكشف هوية أحد أو أي معلومات خاصة.
+٣. لا تذكر أنك Gemini أو AI أو نموذج لغوي — أنت مساعد مركز المعرفة فقط.
 ٤. أجب بلغة المستخدم تلقائياً (عربي أو إنجليزي).
-٥. إذا لم تجد الجواب قل ذلك بوضوح بدلاً من الاختراع.
-٦. كن دقيقاً، منظماً، ومختصراً. استخدم الأرقام والنقاط عند الحاجة.
-٧. عند الإجابة من ملف، اذكر اسم الملف المصدر.
+٥. إذا لم تجد الجواب في المصادر قل ذلك بوضوح.
+٦. كن دقيقاً ومنظماً. استخدم الأرقام والنقاط عند الحاجة.
+٧. عند الإجابة من ملف، اذكر اسم الملف المصدر بين قوسين.
+${ctx ? "\n\nقاعدة المعرفة والملفات:\n" + ctx : "\n\nقاعدة المعرفة فارغة حالياً."}`;
 
-${fullCtx ? "قاعدة المعرفة والملفات المتاحة:\n" + fullCtx : "قاعدة المعرفة فارغة حالياً — حث المستخدم على رفع ملفات أو إضافة محتوى."}`;
-
-  const r = await fetch(
-    `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${GEM_KEY}`,
-    { method:"POST", headers:{"Content-Type":"application/json"},
+  const res = await fetch(
+    `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${CFG.GEM_KEY}`,
+    {
+      method: "POST",
+      headers: {"Content-Type":"application/json"},
       body: JSON.stringify({
-        system_instruction:{parts:[{text:sys}]},
-        contents:[{role:"user",parts:[{text:question}]}],
-        generationConfig:{temperature:0.15, maxOutputTokens:1400}
+        system_instruction: {parts:[{text:sys}]},
+        contents: [{role:"user", parts:[{text:question}]}],
+        generationConfig: {temperature:0.15, maxOutputTokens:1400}
       })
     }
   );
-  const d = await r.json();
-  if(d.error) throw new Error(d.error.message);
+  if(!res.ok){
+    const err = await res.json().catch(()=>({}));
+    throw new Error(err?.error?.message || `HTTP ${res.status}`);
+  }
+  const d = await res.json();
   return d.candidates?.[0]?.content?.parts?.[0]?.text || "لم أتمكن من الإجابة.";
 }
 
-// ── PDF EXTRACT ─────────────────────────────────
+// ── PDF TEXT EXTRACTION ────────────────────────────────
 async function extractPDF(file){
+  if(!window.pdfjsLib) return "";
   try {
     const buf = await file.arrayBuffer();
     const pdf = await pdfjsLib.getDocument({data:buf}).promise;
     let text = "";
-    for(let i=1; i<=Math.min(pdf.numPages, 50); i++){
-      const pg = await pdf.getPage(i);
-      const ct = await pg.getTextContent();
+    const maxPages = Math.min(pdf.numPages, 60);
+    for(let i=1; i<=maxPages; i++){
+      const pg  = await pdf.getPage(i);
+      const ct  = await pg.getTextContent();
       text += ct.items.map(it=>it.str).join(" ") + "\n";
     }
-    return text.trim().substring(0, 15000);
-  } catch(e){
-    return "";
-  }
+    return text.trim().substring(0, 20000);
+  } catch(e){ return ""; }
 }
 
-// ── FILE ICON ───────────────────────────────────
+// ── FILE HELPERS ───────────────────────────────────────
 function fileIcon(type){
   if(!type) return "📄";
-  if(type.includes("pdf")) return "📕";
+  if(type.includes("pdf"))  return "📕";
   if(type.includes("image")) return "🖼️";
   if(type.includes("presentation")||type.includes("powerpoint")) return "📊";
   if(type.includes("word")||type.includes("document")) return "📝";
@@ -332,211 +318,197 @@ function fileIcon(type){
   if(type.includes("video")) return "🎬";
   return "📄";
 }
-
 function fmtSize(b){
   if(!b) return "";
   if(b<1024) return b+"B";
   if(b<1048576) return (b/1024).toFixed(1)+"KB";
   return (b/1048576).toFixed(1)+"MB";
 }
-
 function fmtDate(d){
   if(!d) return "";
   return new Date(d).toLocaleDateString("ar-SA",{month:"short",day:"numeric"});
 }
 
-// ── LOAD FILES ──────────────────────────────────
+// ── LOAD DATA ──────────────────────────────────────────
+async function loadFolders(){
+  const db = getSB(); if(!db) return;
+  const {data} = await db.from("folders").select("*").order("created_at");
+  S.folders = data || [];
+}
+
 async function loadFiles(){
   S.filesLoading = true; render();
+  const db = getSB();
+  if(!db){ S.filesLoading=false; render(); return; }
   try {
-    const {data,error} = await sb.from("file_metadata").select("*").order("created_at",{ascending:false});
+    const {data,error} = await db.from("file_metadata").select("*").order("created_at",{ascending:false});
     if(error) throw error;
     S.files = data || [];
-  } catch(e){
-    notif("❌ خطأ في تحميل الملفات: " + e.message);
-  }
+  } catch(e){ notif("❌ "+e.message); }
   S.filesLoading = false; render();
 }
 
-// ── UPLOAD ──────────────────────────────────────
+async function loadAll(){
+  await Promise.all([loadFolders(), loadFiles()]);
+}
+
+// ── UPLOAD ────────────────────────────────────────────
 async function uploadFiles(fileList){
-  if(!fileList || !fileList.length) return;
-  S.uploading = true; S.selected.clear(); render();
-  let done = 0;
+  if(!fileList?.length) return;
+  const db = getSB(); if(!db){ notif("❌ خطأ في الاتصال"); return; }
+  initPDF();
+  S.uploading=true; S.selected.clear(); render();
+  let done=0;
   for(const file of Array.from(fileList)){
-    S.uploadLabel = `جارٍ رفع: ${file.name}`;
-    S.uploadPct = Math.round((done/fileList.length)*100);
-    render();
+    S.uploadLabel=`جارٍ رفع: ${file.name}`; S.uploadPct=Math.round((done/fileList.length)*100); render();
     try {
-      // 1. Extract text if PDF
-      let extracted = "";
+      let extracted="";
       if(file.type.includes("pdf")){
-        S.uploadLabel = `استخراج النص: ${file.name}`;
-        render();
+        S.uploadLabel=`استخراج النص: ${file.name}`; render();
         extracted = await extractPDF(file);
       }
-      // 2. Upload to Supabase Storage
-      const ext = file.name.split(".").pop();
-      const path = `${Date.now()}_${Math.random().toString(36).slice(2)}.${ext}`;
-      const {error:upErr} = await sb.storage.from(BUCKET).upload(path, file, {upsert:true});
+      const ext   = file.name.split(".").pop()||"bin";
+      const path  = `${Date.now()}_${Math.random().toString(36).slice(2)}.${ext}`;
+      const {error:upErr} = await db.storage.from(CFG.BUCKET).upload(path, file, {upsert:true});
       if(upErr) throw upErr;
-      // 3. Get public URL
-      const {data:urlData} = sb.storage.from(BUCKET).getPublicUrl(path);
-      // 4. Save metadata to DB
-      const {error:dbErr} = await sb.from("file_metadata").insert({
-        name: path,
-        original_name: file.name,
-        category: "غير مصنف",
-        file_type: file.type || ext,
-        file_size: file.size,
-        storage_path: path,
-        public_url: urlData.publicUrl,
-        extracted_text: extracted,
-        tags: ""
+      const {data:urlData} = db.storage.from(CFG.BUCKET).getPublicUrl(path);
+      const {error:dbErr} = await db.from("file_metadata").insert({
+        name: path, original_name: file.name,
+        category: S.activeFolder==="الكل" ? "عام" : S.activeFolder,
+        file_type: file.type||ext, file_size: file.size,
+        storage_path: path, public_url: urlData.publicUrl,
+        extracted_text: extracted, tags: ""
       });
       if(dbErr) throw dbErr;
       done++;
-    } catch(e){
-      notif("❌ فشل رفع " + file.name + ": " + e.message);
-    }
+    } catch(e){ notif("❌ فشل: "+file.name); }
   }
-  S.uploadPct = 100;
-  S.uploadLabel = `✅ تم رفع ${done} من ${fileList.length} ملف`;
+  S.uploadPct=100; S.uploadLabel=`✅ تم رفع ${done} ملف`;
   render();
   await loadFiles();
-  setTimeout(()=>{ S.uploading=false; S.uploadPct=0; S.uploadLabel=""; render(); }, 1500);
-  if(done>0) notif(`✅ تم رفع ${done} ملف بنجاح`);
+  setTimeout(()=>{ S.uploading=false; S.uploadPct=0; S.uploadLabel=""; render(); },1500);
+  if(done>0) notif(`✅ تم رفع ${done} ملف`);
 }
 
-// ── DELETE FILES ────────────────────────────────
+// ── DELETE FILES ──────────────────────────────────────
 async function deleteSelected(){
   if(!S.selected.size) return;
-  if(!confirm(`هل تريد حذف ${S.selected.size} ملف؟`)) return;
-  const ids = [...S.selected];
-  let ok = 0;
-  for(const id of ids){
-    const f = S.files.find(x=>x.id===id);
-    if(!f) continue;
-    try {
-      await sb.storage.from(BUCKET).remove([f.storage_path]);
-      await sb.from("file_metadata").delete().eq("id",id);
-      ok++;
-    } catch(e){}
+  if(!confirm(`حذف ${S.selected.size} ملف نهائياً؟`)) return;
+  const db=getSB(); if(!db) return;
+  let ok=0;
+  for(const id of [...S.selected]){
+    const f=S.files.find(x=>x.id===id); if(!f) continue;
+    try { await db.storage.from(CFG.BUCKET).remove([f.storage_path]); await db.from("file_metadata").delete().eq("id",id); ok++; }
+    catch(e){}
   }
-  S.selected.clear();
-  notif(`🗑️ تم حذف ${ok} ملف`);
-  await loadFiles();
+  S.selected.clear(); notif(`🗑️ حُذف ${ok} ملف`); await loadFiles();
 }
 
-// ── MOVE CATEGORY ───────────────────────────────
-async function moveSelected(){
-  if(!S.selected.size || !S.moveCat) return;
-  const ids = [...S.selected];
-  for(const id of ids){
-    await sb.from("file_metadata").update({category:S.moveCat}).eq("id",id);
-  }
-  S.selected.clear(); S.showMoveModal=false;
-  notif(`✅ تم نقل ${ids.length} ملف إلى "${S.moveCat}"`);
-  await loadFiles();
-}
-
-// ── DELETE SINGLE ───────────────────────────────
 async function deleteFile(id){
-  const f = S.files.find(x=>x.id===id);
-  if(!f || !confirm("حذف هذا الملف؟")) return;
-  try {
-    await sb.storage.from(BUCKET).remove([f.storage_path]);
-    await sb.from("file_metadata").delete().eq("id",id);
-    S.files = S.files.filter(x=>x.id!==id);
-    notif("🗑️ تم الحذف");
-    render();
-  } catch(e){ notif("❌ فشل الحذف"); }
+  const f=S.files.find(x=>x.id===id);
+  if(!f||!confirm("حذف هذا الملف نهائياً؟")) return;
+  const db=getSB(); if(!db) return;
+  try { await db.storage.from(CFG.BUCKET).remove([f.storage_path]); await db.from("file_metadata").delete().eq("id",id); S.files=S.files.filter(x=>x.id!==id); notif("🗑️ تم الحذف"); render(); }
+  catch(e){ notif("❌ فشل الحذف"); }
 }
 
-// ── TOGGLE SELECT ───────────────────────────────
-function toggleSel(id){
-  if(S.selected.has(id)) S.selected.delete(id);
-  else S.selected.add(id);
-  render();
-}
-function selAll(){
-  const shown = filtered();
-  if(S.selected.size===shown.length) S.selected.clear();
-  else shown.forEach(f=>S.selected.add(f.id));
-  render();
-}
-function filtered(){
-  return S.filterCat==="الكل" ? S.files : S.files.filter(f=>f.category===S.filterCat);
-}
-function allCats(){
-  return ["الكل",...new Set([...DEFAULT_CATS,...S.files.map(f=>f.category).filter(Boolean)])];
-}
-
-// ── CHAT ────────────────────────────────────────
-async function sendMsg(){
-  const q = S.inp.trim();
-  if(!q||S.loading) return;
-  S.inp=""; S.msgs.push({r:"user",t:q}); S.loading=true; render(); scrollEnd();
-  try {
-    const a = await callGemini(q);
-    S.msgs.push({r:"bot",t:a});
-  } catch(e){
-    S.msgs.push({r:"bot",t:"⚠️ خطأ في الاتصال. تحقق من الإنترنت.\nConnection error."});
+// ── MOVE FILES ────────────────────────────────────────
+async function moveFiles(targetFolder){
+  if(!S.selected.size||!targetFolder) return;
+  const db=getSB(); if(!db) return;
+  for(const id of [...S.selected]){
+    await db.from("file_metadata").update({category:targetFolder}).eq("id",id);
   }
-  S.loading=false; render(); scrollEnd();
+  S.selected.clear(); S.modal=null;
+  notif(`📂 تم النقل إلى "${targetFolder}"`); await loadFiles();
+}
+
+// ── FOLDER CRUD ───────────────────────────────────────
+async function addFolder(name){
+  if(!name.trim()) return;
+  const db=getSB(); if(!db) return;
+  const {error}=await db.from("folders").insert({name:name.trim()});
+  if(error) return notif("❌ "+error.message);
+  S.modal=null; notif(`📁 تم إنشاء مجلد "${name}"`);
+  await loadFolders(); render();
+}
+
+async function renameFolder(oldName, newName){
+  if(!newName.trim()||oldName===newName) return;
+  const db=getSB(); if(!db) return;
+  await db.from("folders").update({name:newName}).eq("name",oldName);
+  await db.from("file_metadata").update({category:newName}).eq("category",oldName);
+  if(S.activeFolder===oldName) S.activeFolder=newName;
+  S.modal=null; notif(`✅ تمت إعادة التسمية`);
+  await loadAll(); render();
+}
+
+async function deleteFolder(name){
+  if(!confirm(`حذف مجلد "${name}"؟ ستنتقل ملفاته إلى "عام".`)) return;
+  const db=getSB(); if(!db) return;
+  await db.from("file_metadata").update({category:"عام"}).eq("category",name);
+  await db.from("folders").delete().eq("name",name);
+  if(S.activeFolder===name) S.activeFolder="الكل";
+  S.modal=null; notif(`🗑️ حُذف المجلد`);
+  await loadAll(); render();
+}
+
+// ── SELECT ───────────────────────────────────────────
+function toggleSel(id){ S.selected.has(id)?S.selected.delete(id):S.selected.add(id); render(); }
+function selAll(){ const sh=filteredFiles(); if(S.selected.size===sh.length) S.selected.clear(); else sh.forEach(f=>S.selected.add(f.id)); render(); }
+function filteredFiles(){ return S.activeFolder==="الكل"?S.files:S.files.filter(f=>f.category===S.activeFolder); }
+function folderCount(name){ return S.files.filter(f=>f.category===name).length; }
+
+// ── CHAT ─────────────────────────────────────────────
+async function sendMsg(){
+  const q=S.inp.trim(); if(!q||S.chatLoading) return;
+  S.inp=""; S.msgs.push({r:"user",t:q}); S.chatLoading=true; render(); scrollEnd();
+  try { const a=await callGemini(q); S.msgs.push({r:"bot",t:a}); }
+  catch(e){ S.msgs.push({r:"bot",t:`⚠️ خطأ: ${e.message}\n\nتحقق من اتصال الإنترنت وأعد المحاولة.`}); }
+  S.chatLoading=false; render(); scrollEnd();
 }
 function scrollEnd(){ setTimeout(()=>document.getElementById("me")?.scrollIntoView({behavior:"smooth"}),60); }
 
-// ── ADMIN ────────────────────────────────────────
+// ── ADMIN KB ─────────────────────────────────────────
 function addEntry(){
   if(!S.formData.title||!S.formData.content) return;
   S.knowledge.unshift({...S.formData,id:Date.now()});
   S.formData={category:"",title:"",content:"",tags:""};
   S.showAddForm=false; saveKB(); notif("✅ تمت الإضافة");
 }
-function delEntry(id){
-  if(!confirm("حذف هذا العنصر؟")) return;
-  S.knowledge=S.knowledge.filter(k=>k.id!==id); saveKB(); notif("🗑️ تم الحذف"); render();
-}
-function saveEdit(){
-  const i=S.knowledge.findIndex(k=>k.id===S.editEntry.id);
-  if(i!==-1) S.knowledge[i]={...S.editEntry};
-  S.editEntry=null; saveKB(); notif("✅ تم الحفظ"); render();
-}
+function delEntry(id){ if(!confirm("حذف هذا العنصر؟")) return; S.knowledge=S.knowledge.filter(k=>k.id!==id); saveKB(); notif("🗑️ حُذف"); render(); }
+function saveEdit(){ const i=S.knowledge.findIndex(k=>k.id===S.editEntry.id); if(i!==-1) S.knowledge[i]={...S.editEntry}; S.editEntry=null; saveKB(); notif("✅ تم الحفظ"); render(); }
 
-// ── NOTIF ────────────────────────────────────────
-function notif(m){
-  if(S.notifTimer) clearTimeout(S.notifTimer);
-  S.notif=m; render();
-  S.notifTimer=setTimeout(()=>{S.notif="";render();},3000);
-}
+// ── NOTIF ────────────────────────────────────────────
+function notif(m){ if(S.notifTimer) clearTimeout(S.notifTimer); S.notif=m; render(); S.notifTimer=setTimeout(()=>{S.notif="";render();},3200); }
 
-// ── ESC ─────────────────────────────────────────
+// ── HELPERS ──────────────────────────────────────────
 function esc(s){ if(!s) return ""; return String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;"); }
 function gv(id){ return document.getElementById(id)?.value||""; }
 
-// ═══════════════════ RENDER ═══════════════════════
+// ═════════════════════ HTML BUILD ════════════════════
 
-function render(){ document.getElementById("root").innerHTML = buildHTML(); ev(); }
+function render(){ document.getElementById("root").innerHTML = html(); attachEvents(); }
 
-function buildHTML(){
+function html(){
   return `
     ${S.notif?`<div class="notif">${S.notif}</div>`:""}
-    ${S.showMoveModal ? buildMoveModal() : ""}
+    ${S.modal ? buildModal() : ""}
     <div class="header">
       <div class="hlogo">
         <div class="anchor">⚓</div>
         <div>
           <div class="htitle">مركز معرفة الإنقاذ البحري الجوي</div>
-          <div class="hsub">NAVAL AVIATION RESCUE SWIMMING · KB v2.0</div>
+          <div class="hsub">NAVAL AVIATION RESCUE SWIMMING · KB v3.0</div>
         </div>
       </div>
       <div class="nav">
         <div class="sdot"></div>
         <button class="nb ${S.view==='chat'?'act':''}" id="nv-chat">💬 محادثة</button>
-        <button class="nb ${S.view==='files'?'act':''}" id="nv-files">📁 الملفات</button>
-        ${S.adminAuth
-          ? `<button class="nb ${S.view==='admin'?'act':''}" id="nv-admin">⚙️ إدارة</button><button class="nb" id="nv-out">خروج</button>`
+        ${S.auth
+          ? `<button class="nb ${S.view==='files'?'act':''}" id="nv-files">📁 الملفات</button>
+             <button class="nb ${S.view==='admin'?'act':''}" id="nv-admin">⚙️ إدارة</button>
+             <button class="nb" id="nv-out">خروج 🔓</button>`
           : `<button class="nb ${S.view==='login'?'act':''}" id="nv-login">🔐 المعلم</button>`
         }
       </div>
@@ -549,132 +521,170 @@ function buildHTML(){
     </div>`;
 }
 
-// ── CHAT HTML ────────────────────────────────────
+// ── CHAT HTML ─────────────────────────────────────────
 function buildChat(){
-  const fileCount = S.files.length;
-  const kbCount   = S.knowledge.length;
   const msgs = S.msgs.map(m=>`
     <div class="mr ${m.r}">
       <div class="av ${m.r==='user'?'user':'bot'}">${m.r==='user'?'👤':'⚓'}</div>
       <div class="bub ${m.r==='user'?'user':'bot'}">${esc(m.t)}</div>
     </div>`).join("");
-  const typing = S.loading?`<div class="mr bot"><div class="av bot">⚓</div><div class="bub bot typing"><div class="dot"></div><div class="dot"></div><div class="dot"></div></div></div>`:"";
+  const typing = S.chatLoading?`<div class="mr bot"><div class="av bot">⚓</div><div class="bub bot typing"><div class="dot"></div><div class="dot"></div><div class="dot"></div></div></div>`:"";
   const welcome = S.msgs.length===0?`<div class="welcome">
     <div class="wicon">⚓</div>
     <div class="wtitle">مركز معرفة الإنقاذ البحري الجوي</div>
-    <div class="wsub">اسألني أي سؤال عن الإنقاذ البحري الجوي.<br>
-      ${fileCount>0?`يوجد <b style="color:var(--gold)">${fileCount} ملف</b> و<b style="color:var(--gold)">${kbCount} عنصر</b> في قاعدة المعرفة.`:`<span style="color:#c8a05080">لم يُرفع أي ملف بعد — اذهب لتبويب الملفات لرفع مراجعك.</span>`}
-    </div>
+    <div class="wsub">اسألني أي سؤال عن الإنقاذ البحري الجوي بالعربية أو الإنجليزية.<br>
+    ${S.auth&&S.files.length>0?`<span style="color:var(--gold)">📁 ${S.files.length} ملف متاح في قاعدة المعرفة</span>`:`<span style="color:#5a7a9a;font-size:12px">Ask about procedures, equipment, protocols, or techniques.</span>`}</div>
     <div class="wqs">
-      ${["ما هو تسلسل الإنقاذ؟","What equipment does a rescue swimmer need?","كيف أجري CPR للغريق؟","متى أستخدم إشارة ABORT؟"].map(q=>
+      ${["ما هو تسلسل الإنقاذ؟","What are the hand signals?","كيف أجري CPR للغريق؟","ما هي معدات سباح الإنقاذ؟"].map(q=>
         `<button class="nb qq" data-q="${q}">${q}</button>`).join("")}
     </div></div>`:"";
   return `<div class="chat-wrap">
     <div class="sbar">
-      <div class="si">📁 الملفات: <b>${fileCount}</b></div>
-      <div class="si">📚 قاعدة المعرفة: <b>${kbCount}</b></div>
-      <div class="si">💬 الرسائل: <b>${S.msgs.length}</b></div>
+      <div class="si">📁 الملفات: <b>${S.files.length}</b></div>
+      <div class="si">📚 ملاحظات: <b>${S.knowledge.length}</b></div>
     </div>
-    <div class="msgs" id="msgs">${welcome}${msgs}${typing}<div id="me"></div></div>
+    <div class="msgs">${welcome}${msgs}${typing}<div id="me"></div></div>
     <div class="iarea">
-      <textarea class="ci" id="ci" placeholder="اكتب سؤالك... / Ask anything..." rows="1" dir="auto" ${S.loading?"disabled":""}>${esc(S.inp)}</textarea>
-      <button class="sbtn" id="sbtn" ${S.loading||!S.inp.trim()?"disabled":""}>✈</button>
+      <textarea class="ci" id="ci" placeholder="اكتب سؤالك هنا... / Ask your question here..." rows="1" dir="auto" ${S.chatLoading?"disabled":""}>${esc(S.inp)}</textarea>
+      <button class="sbtn" id="sbtn" ${S.chatLoading||!S.inp.trim()?"disabled":""}>✈</button>
     </div></div>`;
 }
 
-// ── FILES HTML ───────────────────────────────────
+// ── FILES HTML ────────────────────────────────────────
 function buildFiles(){
-  const shown = filtered();
-  const selCount = [...S.selected].filter(id=>shown.find(f=>f.id===id)).length;
+  const shown    = filteredFiles();
+  const selShown = [...S.selected].filter(id=>shown.find(f=>f.id===id)).length;
+
+  const folderList = [
+    {name:"الكل", icon:"🗂️", count:S.files.length},
+    ...S.folders.map(f=>({name:f.name, icon:"📁", count:folderCount(f.name)}))
+  ];
+
+  const sidebar = `<div class="fsidebar">
+    <div class="fsidebar-top">
+      <div class="fsidebar-title">📁 المجلدات</div>
+      <button class="btn bg bsm" id="add-folder-btn" style="width:100%">+ مجلد جديد</button>
+    </div>
+    <div class="folders-list">
+      ${folderList.map(f=>`
+        <div class="folder-item ${S.activeFolder===f.name?'act':''} fitem" data-folder="${f.name}">
+          <span style="font-size:14px">${f.icon}</span>
+          <span class="fn">${esc(f.name)}</span>
+          <span class="fcount">${f.count}</span>
+          ${f.name!=="الكل"?`
+            <div class="folder-actions">
+              <button class="icon-btn rename-folder" data-name="${f.name}" title="إعادة تسمية">✏️</button>
+              <button class="icon-btn del-folder" data-name="${f.name}" title="حذف">🗑️</button>
+            </div>`:""}
+        </div>`).join("")}
+    </div>
+  </div>`;
+
   const cards = shown.map(f=>{
-    const sel = S.selected.has(f.id);
-    return `<div class="fcard ${sel?'selected':''}" data-id="${f.id}">
+    const sel=S.selected.has(f.id);
+    return `<div class="fcard ${sel?'selected':''} fcard-item" data-id="${f.id}">
       <div class="fcard-check">${sel?'✓':''}</div>
       <div class="fcard-icon">${fileIcon(f.file_type)}</div>
       <div class="fcard-name">${esc(f.original_name)}</div>
-      <span class="fcard-badge">${esc(f.category||'غير مصنف')}</span>
-      <div class="fcard-size">${fmtSize(f.file_size)} · ${fmtDate(f.created_at)}</div>
-      ${f.extracted_text?`<div class="fcard-ext">✅ نص مستخرج</div>`:`<div class="fcard-ext" style="color:#5a7a9a">— لا نص</div>`}
-      <div style="display:flex;gap:5px;margin-top:4px">
-        ${f.public_url?`<a href="${f.public_url}" target="_blank" class="btn bo bsm" onclick="event.stopPropagation()">👁️ فتح</a>`:""}
-        <button class="btn bd bsm del-single" data-id="${f.id}" onclick="event.stopPropagation()">🗑️</button>
+      <span class="fcard-folder">📁 ${esc(f.category||'عام')}</span>
+      <div class="fcard-meta">${fmtSize(f.file_size)} · ${fmtDate(f.created_at)}</div>
+      <div class="fcard-txt">${f.extracted_text?'✅ نص مستخرج':'— لا نص'}</div>
+      <div class="fcard-btns">
+        ${f.public_url?`<a href="${f.public_url}" target="_blank" class="btn bo bsm" onclick="event.stopPropagation()">👁️</a>`:""}
+        <button class="btn bd bsm del-one" data-id="${f.id}" onclick="event.stopPropagation()">🗑️</button>
       </div>
     </div>`;
   }).join("");
 
   return `<div class="files-wrap">
-    <div class="ftop">
-      <div class="ftop-row">
-        <div class="ftitle">📁 مكتبة الملفات <span style="font-size:12px;color:var(--muted);font-family:monospace">(${S.files.length} ملف)</span></div>
-        <div class="faction-row">
+    ${sidebar}
+    <div class="fmain">
+      <div class="fmain-top">
+        <div class="fmain-title">
+          ${S.activeFolder==="الكل"?"🗂️ جميع الملفات":"📁 "+esc(S.activeFolder)}
+          <span style="font-size:11px;color:var(--muted);font-family:monospace">(${shown.length})</span>
+        </div>
+        <div class="fmain-actions">
           ${S.filesLoading?`<div class="spin"></div>`:""}
-          <button class="btn bg" id="reload-files">🔄 تحديث</button>
+          <button class="btn bo bsm" id="reload-btn">🔄</button>
         </div>
       </div>
-    </div>
 
-    <div class="upzone ${S.drag?'drag':''}" id="upzone">
-      <input type="file" id="file-input" multiple accept=".pdf,.jpg,.jpeg,.png,.gif,.webp,.ppt,.pptx,.doc,.docx,.xls,.xlsx,.mp4,.mov">
-      <div class="upzone-icon">📂</div>
-      <div class="upzone-text">
-        <b>اسحب ملفاتك هنا أو اضغط للاختيار</b><br>
-        PDF · صور · PPT · Word · Excel · فيديو
+      <div class="upzone ${S.drag?'drag':''}" id="upzone">
+        <input type="file" id="file-input" multiple accept=".pdf,.jpg,.jpeg,.png,.gif,.webp,.ppt,.pptx,.doc,.docx,.xls,.xlsx,.mp4,.mov,.heic">
+        <div class="upzone-icon">📂</div>
+        <div class="upzone-text"><b>اسحب ملفاتك هنا أو اضغط للاختيار</b><br>PDF · صور · PPT · Word · Excel</div>
       </div>
-    </div>
 
-    ${S.uploading||S.uploadLabel?`
-      <div class="prog-bar"><div class="prog-fill" style="width:${S.uploadPct}%"></div></div>
-      <div class="prog-label">${esc(S.uploadLabel)}</div>`:""
-    }
+      ${S.uploading||S.uploadLabel?`<div class="prog-wrap">
+        <div class="prog-bar"><div class="prog-fill" style="width:${S.uploadPct}%"></div></div>
+        <div class="prog-label">${esc(S.uploadLabel)}</div></div>`:""}
 
-    <div class="cats">
-      ${allCats().map(c=>`<button class="cb ${S.filterCat===c?'act':''} cat-f" data-cat="${c}">${c}</button>`).join("")}
-    </div>
+      ${S.selected.size>0?`<div class="selbar">
+        <span>✓ ${S.selected.size} محدد</span>
+        <button class="btn bg bsm" id="sel-all-btn">${selShown===shown.length?'إلغاء الكل':'تحديد الكل'}</button>
+        <button class="btn bo bsm" id="move-sel-btn">📂 نقل</button>
+        <button class="btn bd bsm" id="del-sel-btn">🗑️ حذف</button>
+      </div>`:`<div style="padding:4px 14px 6px;direction:rtl">
+        <button class="btn bo bsm" id="sel-all-btn">☑️ تحديد الكل</button>
+      </div>`}
 
-    ${S.selected.size>0?`
-      <div class="selbar">
-        <span>✓ تم تحديد ${S.selected.size} ملف</span>
-        <button class="btn bg bsm" id="sel-all">${selCount===shown.length?'إلغاء الكل':'تحديد الكل'}</button>
-        <button class="btn bo bsm" id="move-btn">📂 نقل لتصنيف</button>
-        <button class="btn bd bsm" id="del-sel">🗑️ حذف المحدد</button>
-      </div>`:
-      `<div style="padding:0 18px 6px;direction:rtl">
-        <button class="btn bo bsm" id="sel-all">☑️ تحديد الكل</button>
-      </div>`
-    }
-
-    <div class="fgrid" id="fgrid">
-      ${S.filesLoading
-        ? `<div class="empty"><div class="ei">⏳</div>جارٍ التحميل...</div>`
-        : shown.length===0
-          ? `<div class="empty"><div class="ei">📭</div>${S.filterCat==="الكل"?"لم يُرفع أي ملف بعد<br><small>ارفع ملفاتك من المنطقة أعلاه</small>":"لا توجد ملفات في هذا التصنيف"}</div>`
-          : cards
-      }
+      <div class="fgrid">
+        ${S.filesLoading
+          ?`<div class="empty-state"><div class="empty-icon">⏳</div>جارٍ التحميل...</div>`
+          :shown.length===0
+            ?`<div class="empty-state"><div class="empty-icon">📭</div>${S.activeFolder==="الكل"?"لم يُرفع أي ملف بعد":"لا توجد ملفات في هذا المجلد"}</div>`
+            :cards}
+      </div>
     </div>
   </div>`;
 }
 
-// ── MOVE MODAL ───────────────────────────────────
-function buildMoveModal(){
-  return `<div class="overlay" id="overlay">
+// ── MODAL HTML ────────────────────────────────────────
+function buildModal(){
+  const m=S.modal;
+  if(m.type==="folder-add") return `<div class="overlay" id="ov">
     <div class="modal">
-      <div class="modal-title">📂 نقل ${S.selected.size} ملف إلى تصنيف</div>
-      <div class="fg">
-        <label class="fl">اختر التصنيف</label>
-        <select class="fi" id="move-cat-sel">
-          <option value="">-- اختر --</option>
-          ${DEFAULT_CATS.map(c=>`<option value="${c}" ${S.moveCat===c?'selected':''}>${c}</option>`).join('')}
+      <div class="modal-title">📁 إنشاء مجلد جديد</div>
+      <div class="fg"><label class="fl">اسم المجلد</label>
+        <input class="fi" id="folder-name-inp" placeholder="مثال: إجراءات الإنقاذ" autofocus></div>
+      <div class="modal-btns">
+        <button class="btn bo" id="modal-cancel">إلغاء</button>
+        <button class="btn bg" id="modal-confirm">إنشاء ✓</button>
+      </div>
+    </div></div>`;
+
+  if(m.type==="folder-edit") return `<div class="overlay" id="ov">
+    <div class="modal">
+      <div class="modal-title">✏️ إعادة تسمية المجلد</div>
+      <div class="fg"><label class="fl">الاسم الجديد</label>
+        <input class="fi" id="folder-name-inp" value="${esc(m.data.name)}" autofocus></div>
+      <div class="modal-btns">
+        <button class="btn bo" id="modal-cancel">إلغاء</button>
+        <button class="btn bg" id="modal-confirm">حفظ ✓</button>
+      </div>
+    </div></div>`;
+
+  if(m.type==="move") return `<div class="overlay" id="ov">
+    <div class="modal">
+      <div class="modal-title">📂 نقل ${S.selected.size} ملف إلى مجلد</div>
+      <div class="fg"><label class="fl">اختر المجلد</label>
+        <select class="fi" id="move-folder-sel">
+          <option value="">-- اختر مجلداً --</option>
+          <option value="عام">📁 عام</option>
+          ${S.folders.map(f=>`<option value="${esc(f.name)}">📁 ${esc(f.name)}</option>`).join('')}
         </select>
       </div>
       <div class="modal-btns">
-        <button class="btn bo" id="cancel-move">إلغاء</button>
-        <button class="btn bg" id="confirm-move">نقل ✓</button>
+        <button class="btn bo" id="modal-cancel">إلغاء</button>
+        <button class="btn bg" id="modal-confirm">نقل ✓</button>
       </div>
-    </div>
-  </div>`;
+    </div></div>`;
+
+  return "";
 }
 
-// ── LOGIN HTML ───────────────────────────────────
+// ── LOGIN HTML ────────────────────────────────────────
 function buildLogin(){
   return `<div class="lw"><div class="lc">
     <div class="li2">🔐</div>
@@ -683,56 +693,47 @@ function buildLogin(){
     <input class="lin" id="pi" type="password" placeholder="كلمة المرور / Password" value="${esc(S.pw)}">
     ${S.pwErr?`<div class="lerr">${S.pwErr}</div>`:""}
     <button class="lbtn" id="lbtn">دخول / Login</button>
-    <div style="margin-top:14px;font-size:11px;color:#3a5a7a;font-family:monospace">للمدربين فقط · Instructors Only</div>
+    <div style="margin-top:14px;font-size:11px;color:#3a5a7a;font-family:monospace">للمدرب فقط · Instructor Only</div>
   </div></div>`;
 }
 
-// ── ADMIN HTML ───────────────────────────────────
+// ── ADMIN HTML ────────────────────────────────────────
 function buildAdmin(){
-  const list = S.knowledge.map(k=>`
-    <div class="acard">
-      <div class="ach">
-        <div style="flex:1">
-          <span class="abadge">${esc(k.category||'عام')}</span>
-          <div class="act-title">${esc(k.title)}</div>
-          <div class="act-content">${esc(k.content.length>130?k.content.substring(0,130)+"...":k.content)}</div>
-          ${k.tags?`<div class="atags">${k.tags.split(",").map(t=>`<span class="tag">${esc(t.trim())}</span>`).join('')}</div>`:""}
-        </div>
-        <div class="aactions">
-          <button class="btn bo bsm ae" data-id="${k.id}">✏️</button>
-          <button class="btn bd bsm ad" data-id="${k.id}">🗑️</button>
-        </div>
+  const list=S.knowledge.map(k=>`
+    <div class="acard"><div class="ach">
+      <div style="flex:1">
+        <span class="abadge">${esc(k.category||'عام')}</span>
+        <div class="act-title">${esc(k.title)}</div>
+        <div class="act-content">${esc(k.content.length>130?k.content.substring(0,130)+"...":k.content)}</div>
+        ${k.tags?`<div class="atags">${k.tags.split(",").map(t=>`<span class="tag">${esc(t.trim())}</span>`).join('')}</div>`:""}
       </div>
-    </div>`).join('');
-
-  const af = S.showAddForm ? buildForm(S.formData, false) : '';
-  const ef = S.editEntry   ? buildForm(S.editEntry, true) : '';
-
+      <div class="aactions">
+        <button class="btn bo bsm ae" data-id="${k.id}">✏️</button>
+        <button class="btn bd bsm ad" data-id="${k.id}">🗑️</button>
+      </div>
+    </div></div>`).join('');
+  const af=S.showAddForm?buildForm(S.formData,false):"";
+  const ef=S.editEntry?buildForm(S.editEntry,true):"";
   return `<div class="admin-wrap">
     <div class="atop">
-      <div><div class="atitle">⚙️ إدارة قاعدة المعرفة</div>
-        <div class="acount">TEXT ENTRIES · ${S.knowledge.length}</div></div>
+      <div><div class="atitle">⚙️ الملاحظات النصية</div>
+        <div style="font-size:11px;color:var(--muted);font-family:monospace">${S.knowledge.length} عنصر</div></div>
       <div style="display:flex;gap:8px">
         <button class="btn bg" id="aa-btn">+ إضافة</button>
         <button class="btn bo" id="exp-btn">📤 تصدير</button>
       </div>
     </div>
     ${af}${ef}
-    ${list||`<div class="empty" style="padding:40px"><div class="ei">📭</div>لا توجد عناصر مكتوبة — الملفات المرفوعة تُستخدم تلقائياً</div>`}
+    ${list||`<div style="text-align:center;padding:40px;color:var(--muted)"><div style="font-size:36px;opacity:.3">📝</div><br>لا توجد ملاحظات — الملفات المرفوعة تُستخدم تلقائياً</div>`}
   </div>`;
 }
-
-function buildForm(d, isEdit){
+function buildForm(d,isEdit){
   return `<div class="acard fc">
-    <div class="form-title">${isEdit?'✏️ تعديل العنصر':'➕ إضافة نص جديد'}</div>
-    <div class="fg"><label class="fl">التصنيف</label>
-      <input class="fi" id="fc" value="${esc(d.category||'')}" placeholder="مثال: إجراءات الإنقاذ"></div>
-    <div class="fg"><label class="fl">العنوان *</label>
-      <input class="fi" id="ft" value="${esc(d.title||'')}" placeholder="عنوان واضح ومحدد"></div>
-    <div class="fg"><label class="fl">المحتوى *</label>
-      <textarea class="fi" id="fco" rows="5">${esc(d.content||'')}</textarea></div>
-    <div class="fg"><label class="fl">الكلمات المفتاحية (مفصولة بفواصل)</label>
-      <input class="fi" id="ftg" value="${esc(d.tags||'')}" placeholder="rescue, إنقاذ, CPR"></div>
+    <div class="form-title">${isEdit?'✏️ تعديل':'➕ إضافة نص'}</div>
+    <div class="fg"><label class="fl">التصنيف</label><input class="fi" id="fc" value="${esc(d.category||'')}"></div>
+    <div class="fg"><label class="fl">العنوان *</label><input class="fi" id="ft" value="${esc(d.title||'')}"></div>
+    <div class="fg"><label class="fl">المحتوى *</label><textarea class="fi" id="fco" rows="5">${esc(d.content||'')}</textarea></div>
+    <div class="fg"><label class="fl">الكلمات المفتاحية</label><input class="fi" id="ftg" value="${esc(d.tags||'')}"></div>
     <div class="fr">
       <button class="btn bo" id="cf-cancel">إلغاء</button>
       <button class="btn bg" id="${isEdit?'se-btn':'sa-btn'}">${isEdit?'💾 حفظ':'✅ إضافة'}</button>
@@ -740,97 +741,105 @@ function buildForm(d, isEdit){
   </div>`;
 }
 
-// ═══════════════════ EVENTS ═══════════════════════
-function ev(){
-  const g = id => document.getElementById(id);
+// ═══════════════════ EVENTS ══════════════════════════
+function attachEvents(){
+  const g=id=>document.getElementById(id);
 
   // NAV
   g("nv-chat")?.addEventListener("click",()=>{ S.view="chat"; render(); });
-  g("nv-files")?.addEventListener("click",()=>{ S.view="files"; if(!S.files.length) loadFiles(); else render(); });
-  g("nv-login")?.addEventListener("click",()=>{ S.view="login"; S.pw=""; S.pwErr=""; render(); });
+  g("nv-files")?.addEventListener("click",()=>{ S.view="files"; loadAll(); });
   g("nv-admin")?.addEventListener("click",()=>{ S.view="admin"; render(); });
-  g("nv-out")?.addEventListener("click",()=>{ S.adminAuth=false; S.view="chat"; render(); });
+  g("nv-login")?.addEventListener("click",()=>{ S.view="login"; S.pw=""; S.pwErr=""; render(); });
+  g("nv-out")?.addEventListener("click",()=>{ S.auth=false; S.view="chat"; render(); });
 
   // LOGIN
-  const pi = g("pi");
+  const pi=g("pi");
   if(pi){
     pi.addEventListener("input",e=>S.pw=e.target.value);
     pi.addEventListener("keydown",e=>{ if(e.key==="Enter") doLogin(); });
-    setTimeout(()=>pi.focus(),50);
+    setTimeout(()=>pi.focus(),60);
   }
   g("lbtn")?.addEventListener("click",doLogin);
 
   // CHAT
-  const ci = g("ci");
+  const ci=g("ci");
   if(ci){
     ci.addEventListener("input",e=>{
       S.inp=e.target.value;
-      const sb=g("sbtn"); if(sb) sb.disabled=S.loading||!S.inp.trim();
+      const sb=g("sbtn"); if(sb) sb.disabled=S.chatLoading||!S.inp.trim();
       ci.style.height="auto"; ci.style.height=Math.min(ci.scrollHeight,120)+"px";
     });
     ci.addEventListener("keydown",e=>{ if(e.key==="Enter"&&!e.shiftKey){e.preventDefault();sendMsg();} });
-    if(!S.loading) setTimeout(()=>ci.focus(),50);
+    if(!S.chatLoading) setTimeout(()=>ci.focus(),60);
   }
   g("sbtn")?.addEventListener("click",sendMsg);
   document.querySelectorAll(".qq").forEach(b=>b.addEventListener("click",()=>{ S.inp=b.dataset.q; render(); setTimeout(sendMsg,50); }));
 
   // FILES
-  const fi = g("file-input");
+  const fi=g("file-input");
   if(fi) fi.addEventListener("change",e=>uploadFiles(e.target.files));
-
-  const uz = g("upzone");
+  const uz=g("upzone");
   if(uz){
     uz.addEventListener("dragover",e=>{ e.preventDefault(); S.drag=true; render(); });
     uz.addEventListener("dragleave",()=>{ S.drag=false; render(); });
     uz.addEventListener("drop",e=>{ e.preventDefault(); S.drag=false; uploadFiles(e.dataTransfer.files); });
   }
+  g("reload-btn")?.addEventListener("click",loadAll);
+  g("sel-all-btn")?.addEventListener("click",selAll);
+  g("del-sel-btn")?.addEventListener("click",deleteSelected);
+  g("move-sel-btn")?.addEventListener("click",()=>{ S.modal={type:"move",data:{}}; render(); });
 
-  g("reload-files")?.addEventListener("click",loadFiles);
-  g("sel-all")?.addEventListener("click",selAll);
-  g("del-sel")?.addEventListener("click",deleteSelected);
-  g("move-btn")?.addEventListener("click",()=>{ S.showMoveModal=true; render(); });
+  document.querySelectorAll(".fcard-item").forEach(c=>c.addEventListener("click",()=>toggleSel(c.dataset.id)));
+  document.querySelectorAll(".del-one").forEach(b=>b.addEventListener("click",()=>deleteFile(b.dataset.id)));
 
-  // Move modal
-  g("cancel-move")?.addEventListener("click",()=>{ S.showMoveModal=false; render(); });
-  g("overlay")?.addEventListener("click",e=>{ if(e.target.id==="overlay"){ S.showMoveModal=false; render(); } });
-  g("move-cat-sel")?.addEventListener("change",e=>S.moveCat=e.target.value);
-  g("confirm-move")?.addEventListener("click",moveSelected);
+  // FOLDERS
+  document.querySelectorAll(".fitem").forEach(b=>b.addEventListener("click",()=>{ S.activeFolder=b.dataset.folder; render(); }));
+  g("add-folder-btn")?.addEventListener("click",()=>{ S.modal={type:"folder-add",data:{}}; render(); setTimeout(()=>g("folder-name-inp")?.focus(),60); });
+  document.querySelectorAll(".rename-folder").forEach(b=>b.addEventListener("click",e=>{ e.stopPropagation(); S.modal={type:"folder-edit",data:{name:b.dataset.name}}; render(); setTimeout(()=>g("folder-name-inp")?.focus(),60); }));
+  document.querySelectorAll(".del-folder").forEach(b=>b.addEventListener("click",e=>{ e.stopPropagation(); deleteFolder(b.dataset.name); }));
 
-  // File cards
-  document.querySelectorAll(".fcard").forEach(card=>{
-    card.addEventListener("click",()=>toggleSel(card.dataset.id));
+  // MODAL
+  g("modal-cancel")?.addEventListener("click",()=>{ S.modal=null; render(); });
+  g("ov")?.addEventListener("click",e=>{ if(e.target.id==="ov"){ S.modal=null; render(); } });
+  g("modal-confirm")?.addEventListener("click",()=>{
+    const m=S.modal; if(!m) return;
+    if(m.type==="folder-add")  addFolder(gv("folder-name-inp"));
+    if(m.type==="folder-edit") renameFolder(m.data.name, gv("folder-name-inp"));
+    if(m.type==="move")        moveFiles(gv("move-folder-sel"));
   });
-  document.querySelectorAll(".cat-f").forEach(b=>{
-    b.addEventListener("click",()=>{ S.filterCat=b.dataset.cat; render(); });
-  });
-  document.querySelectorAll(".del-single").forEach(b=>{
-    b.addEventListener("click",()=>deleteFile(b.dataset.id));
-  });
+  g("folder-name-inp")?.addEventListener("keydown",e=>{ if(e.key==="Enter") g("modal-confirm")?.click(); });
 
   // ADMIN
   g("aa-btn")?.addEventListener("click",()=>{ S.showAddForm=!S.showAddForm; S.editEntry=null; S.formData={category:"",title:"",content:"",tags:""}; render(); });
-  g("exp-btn")?.addEventListener("click",()=>{
-    const blob=new Blob([JSON.stringify(S.knowledge,null,2)],{type:"application/json"});
-    const a=document.createElement("a"); a.href=URL.createObjectURL(blob); a.download="kb.json"; a.click();
-    notif("📥 تم التصدير");
-  });
+  g("exp-btn")?.addEventListener("click",()=>{ const b=new Blob([JSON.stringify(S.knowledge,null,2)],{type:"application/json"}); const a=document.createElement("a"); a.href=URL.createObjectURL(b); a.download="kb.json"; a.click(); notif("📥 تم التصدير"); });
   g("cf-cancel")?.addEventListener("click",()=>{ S.showAddForm=false; S.editEntry=null; render(); });
   g("sa-btn")?.addEventListener("click",()=>{ S.formData={category:gv("fc"),title:gv("ft"),content:gv("fco"),tags:gv("ftg")}; addEntry(); });
   g("se-btn")?.addEventListener("click",()=>{ S.editEntry={...S.editEntry,category:gv("fc"),title:gv("ft"),content:gv("fco"),tags:gv("ftg")}; saveEdit(); });
-  document.querySelectorAll(".ae").forEach(b=>b.addEventListener("click",()=>{
-    S.editEntry={...S.knowledge.find(k=>k.id===Number(b.dataset.id))}; S.showAddForm=false; render();
-    setTimeout(()=>g("ft")?.scrollIntoView({behavior:"smooth"}),60);
-  }));
+  document.querySelectorAll(".ae").forEach(b=>b.addEventListener("click",()=>{ S.editEntry={...S.knowledge.find(k=>k.id===Number(b.dataset.id))}; S.showAddForm=false; render(); setTimeout(()=>g("ft")?.scrollIntoView({behavior:"smooth"}),60); }));
   document.querySelectorAll(".ad").forEach(b=>b.addEventListener("click",()=>delEntry(Number(b.dataset.id))));
 }
 
 function doLogin(){
-  if(S.pw===ADMIN_PW){ S.adminAuth=true; S.pwErr=""; S.view="admin"; render(); }
+  if(S.pw===CFG.ADMIN_PW){ S.auth=true; S.pwErr=""; S.view="files"; loadAll(); }
   else { S.pwErr="كلمة المرور غير صحيحة / Wrong password"; render(); }
 }
 
-// ── INIT ─────────────────────────────────────────
-window.onload = () => { render(); };
+// ── INIT ──────────────────────────────────────────────
+window.addEventListener("load",()=>{
+  initPDF();
+  // Load files for chat context (silently, no UI change)
+  const db=getSB();
+  if(db){
+    db.from("file_metadata").select("id,original_name,category,extracted_text").order("created_at",{ascending:false})
+      .then(({data})=>{ if(data) S.files=data; render(); })
+      .catch(()=>{});
+  }
+  render();
+});
 </script>
+
+<!-- External Libraries (loaded after page) -->
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
 </body>
 </html>
