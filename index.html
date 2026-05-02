@@ -41,7 +41,7 @@ html,body{height:100%;font-size:16px;background:var(--bg);font-family:"Noto Sans
 .sbar{display:flex;gap:16px;padding:8px 18px;background:var(--surface);border-bottom:1px solid var(--border2);flex-shrink:0;direction:rtl;flex-wrap:wrap}
 .si{display:flex;align-items:center;gap:5px;font-size:12px;color:var(--muted)}
 .si b{color:var(--gold);font-family:'JetBrains Mono',monospace}
-.msgs{flex:1;overflow-y:auto;padding:20px;display:flex;flex-direction:column;gap:14px;scroll-behavior:smooth;min-height:0}
+.msgs{flex:1;overflow-y:auto;padding:20px;display:flex;flex-direction:column;gap:14px;scroll-behavior:auto;min-height:0;overflow-anchor:auto}
 .msgs::-webkit-scrollbar{width:4px}
 .msgs::-webkit-scrollbar-thumb{background:var(--border);border-radius:2px}
 .mr{display:flex;gap:10px;align-items:flex-start;animation:fi .3s ease}
@@ -200,6 +200,7 @@ let S={
   activeFolder:"الكل",selected:new Set(),
   uploading:false,uploadPct:0,uploadLabel:"",drag:false,
   knowledge:JSON.parse(localStorage.getItem("kb_v3")||"null")||[],
+  chatSummary:localStorage.getItem("kb_chat_summary")||"",
   showAddForm:false,editEntry:null,
   formData:{category:"",title:"",content:"",tags:""},
   pw:"",pwErr:"",modal:null,notif:"",notifTimer:null,
@@ -207,20 +208,48 @@ let S={
 function saveKB(){localStorage.setItem("kb_v3",JSON.stringify(S.knowledge));}
 
 // ── RAG Chat ────────────────────────────────────────
-async function askAI(question,images=[]){
+function buildChatHistory(limit=12){
+  return S.msgs
+    .filter(m=>!m.pending && (m.t||"").trim())
+    .slice(-limit)
+    .map(m=>({
+      role:m.r==="user"?"user":"assistant",
+      content:m.t||""
+    }));
+}
+
+function buildConversationSummary(maxChars=4000, recentLimit=12){
+  const clean=S.msgs.filter(m=>!m.pending && (m.t||"").trim());
+  const older=clean.slice(0, Math.max(0, clean.length-recentLimit));
+  if(!older.length)return S.chatSummary||"";
+  const transcript=older.map(m=>`${m.r==="user"?"الطالب":"المساعد"}: ${m.t}`).join("\n");
+  const trimmed=transcript.length>maxChars ? transcript.slice(-maxChars) : transcript;
+  S.chatSummary=trimmed;
+  localStorage.setItem("kb_chat_summary",trimmed);
+  return trimmed;
+}
+
+async function askAI(question,images=[],history=buildChatHistory(12)){
   const res=await fetch("/api/chat",{
     method:"POST",headers:{"Content-Type":"application/json"},
     body:JSON.stringify({
       question,
       images,
+      history,
+      conversationSummary:buildConversationSummary(4000,12),
       knowledge:S.knowledge,
       mode:"rag",
       answer_policy:"search_all_references_prefer_newest_return_pending_when_unsure",
+      context_policy:"use_history_to_understand_follow_up_questions_rewrite_question_as_standalone_before_reference_search",
       fallback:"__PENDING__"
     })
   });
   const d=await res.json();
   if(!res.ok)throw new Error(d.error||`HTTP ${res.status}`);
+  if(d.conversationSummary && typeof d.conversationSummary==="string"){
+    S.chatSummary=d.conversationSummary.slice(-4000);
+    localStorage.setItem("kb_chat_summary",S.chatSummary);
+  }
   if(d.pending===true || d.answer===null || d.answer===undefined || String(d.answer).trim()==="") return "__PENDING__";
   return d.answer;
 }
@@ -416,10 +445,11 @@ async function sendMsg(){
   const q=S.inp.trim();
   if((!q&&!S.pendingImages.length)||S.chatLoading)return;
   const imgs=[...S.pendingImages];
+  const historyBefore=buildChatHistory(12);
   S.inp="";S.pendingImages=[];
   const userContent=q+(imgs.length?` [+${imgs.length} صورة]`:"");
   S.msgs.push({r:"user",t:userContent,imgs:imgs.map(i=>i.preview)});
-  S.chatLoading=true;render();scrollEnd();
+  S.chatLoading=true;render({forceBottom:true});
   try{
     const imgData=await Promise.all(imgs.map(img=>new Promise((res,rej)=>{
       const reader=new FileReader();
@@ -427,7 +457,7 @@ async function sendMsg(){
       reader.onerror=rej;
       reader.readAsDataURL(img.file);
     })));
-    const a=await askAI(q||"صف هذه الصورة واشرحها في سياق NARS",imgData);
+    const a=await askAI(q||"صف هذه الصورة واشرحها في سياق NARS",imgData,historyBefore);
     if(a==="__PENDING__"){
       await savePendingQ(q||"سؤال مرفق بصورة يحتاج مراجعة المسئول/المطور");
       S.msgs.push({r:"bot",t:"سيتم موافاتك بالإجابة قريباً ✅\nتم حفظ سؤالك في صفحة الأسئلة المعلقة بانتظار رد المسئول/المطور.",pending:true});
@@ -435,9 +465,35 @@ async function sendMsg(){
       S.msgs.push({r:"bot",t:a});
     }
   }catch(e){S.msgs.push({r:"bot",t:"خطأ: "+e.message});}
-  S.chatLoading=false;render();scrollEnd();
+  S.chatLoading=false;render({forceBottom:true});
 }
-function scrollEnd(){setTimeout(()=>document.getElementById("me")?.scrollIntoView({behavior:"smooth"}),60);}
+function getChatScrollState(){
+  const el=document.querySelector(".msgs");
+  if(!el)return null;
+  return {
+    scrollTop:el.scrollTop,
+    scrollHeight:el.scrollHeight,
+    clientHeight:el.clientHeight,
+    distanceFromBottom:el.scrollHeight-el.scrollTop-el.clientHeight
+  };
+}
+function restoreChatScroll(state,opts={}){
+  requestAnimationFrame(()=>{
+    const el=document.querySelector(".msgs");
+    if(!el)return;
+    const forceBottom=opts.forceBottom===true;
+    const wasNearBottom=state?state.distanceFromBottom<80:true;
+    const oldBehavior=el.style.scrollBehavior;
+    el.style.scrollBehavior="auto";
+    if(forceBottom||wasNearBottom){
+      el.scrollTop=el.scrollHeight;
+    }else{
+      el.scrollTop=Math.max(0,el.scrollHeight-el.clientHeight-state.distanceFromBottom);
+    }
+    requestAnimationFrame(()=>{el.style.scrollBehavior=oldBehavior;});
+  });
+}
+function scrollEnd(){restoreChatScroll(null,{forceBottom:true});}
 function addEntry(){
   if(!S.formData.title||!S.formData.content)return;
   S.knowledge.unshift({...S.formData,id:Date.now()});
@@ -450,7 +506,12 @@ function notif(m){if(S.notifTimer)clearTimeout(S.notifTimer);S.notif=m;render();
 function esc(s){if(!s)return"";return String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;");}
 function gv(id){return document.getElementById(id)?.value||"";}
 
-function render(){document.getElementById("root").innerHTML=html();ev();}
+function render(opts={}){
+  const scrollState=getChatScrollState();
+  document.getElementById("root").innerHTML=html();
+  ev();
+  if(S.view==="chat")restoreChatScroll(scrollState,opts);
+}
 
 function html(){return`
   ${S.notif?`<div class="notif">${S.notif}</div>`:""}
