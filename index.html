@@ -204,6 +204,39 @@ async function extractPDF(file){
   }catch(e){return"";}
 }
 
+async function extractExcel(file){
+  if(!window.XLSX)return"";
+  try{
+    const buf=await file.arrayBuffer();
+    const wb=XLSX.read(buf,{type:"array"});
+    let text="";
+    for(const sheetName of wb.SheetNames){
+      const ws=wb.Sheets[sheetName];
+      const csv=XLSX.utils.sheet_to_csv(ws,{blankrows:false});
+      if(csv.trim()) text+=`[Sheet: ${sheetName}]\n${csv}\n\n`;
+    }
+    return text.trim().substring(0,50000);
+  }catch(e){return"";}
+}
+
+async function extractWord(file){
+  if(!window.mammoth)return"";
+  try{
+    const buf=await file.arrayBuffer();
+    const result=await mammoth.extractRawText({arrayBuffer:buf});
+    return (result.value||"").trim().substring(0,50000);
+  }catch(e){return"";}
+}
+
+async function extractText(file){
+  const t=file.type;
+  const name=file.name.toLowerCase();
+  if(t.includes("pdf")) return await extractPDF(file);
+  if(t.includes("sheet")||t.includes("excel")||name.endsWith(".xlsx")||name.endsWith(".xls")) return await extractExcel(file);
+  if(t.includes("word")||t.includes("document")||name.endsWith(".docx")||name.endsWith(".doc")) return await extractWord(file);
+  return "";
+}
+
 function fileIcon(t){if(!t)return"📄";if(t.includes("pdf"))return"📕";if(t.includes("image"))return"🖼️";if(t.includes("presentation")||t.includes("powerpoint"))return"📊";if(t.includes("word"))return"📝";if(t.includes("sheet")||t.includes("excel"))return"📗";if(t.includes("video"))return"🎬";return"📄";}
 function fmtSize(b){if(!b)return"";if(b<1024)return b+"B";if(b<1048576)return(b/1024).toFixed(1)+"KB";return(b/1048576).toFixed(1)+"MB";}
 function fmtDate(d){if(!d)return"";return new Date(d).toLocaleDateString("ar-SA",{month:"short",day:"numeric"});}
@@ -227,7 +260,7 @@ async function uploadFiles(fileList){
     S.uploadLabel=`رفع: ${file.name}`;S.uploadPct=Math.round((done/fileList.length)*100);render();
     try{
       let extracted="";
-      if(file.type.includes("pdf")){S.uploadLabel=`قراءة النص: ${file.name}`;render();extracted=await extractPDF(file);}
+      const needsExtract=file.type.includes("pdf")||file.type.includes("sheet")||file.type.includes("excel")||file.type.includes("word")||file.type.includes("document")||file.name.toLowerCase().endsWith(".xlsx")||file.name.toLowerCase().endsWith(".xls")||file.name.toLowerCase().endsWith(".docx")||file.name.toLowerCase().endsWith(".doc");if(needsExtract){S.uploadLabel=`قراءة النص: ${file.name}`;render();extracted=await extractText(file);}
       const ext=file.name.split(".").pop()||"bin";
       const path=`${Date.now()}_${Math.random().toString(36).slice(2)}.${ext}`;
       const{error:upErr}=await db.storage.from(CFG.BUCKET).upload(path,file,{upsert:true});if(upErr)throw upErr;
@@ -525,5 +558,7 @@ window.addEventListener("load",()=>{initPDF();render();});
 </script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/mammoth@1.6.0/mammoth.browser.min.js"></script>
 </body>
 </html>
