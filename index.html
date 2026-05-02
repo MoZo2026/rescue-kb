@@ -199,17 +199,18 @@ function saveKB(){ localStorage.setItem("kb_v3", JSON.stringify(S.knowledge)); }
 
 // ── AI CALL — via secure serverless function ────
 async function askAI(question){
-  const kbCtx = S.knowledge.map(k=>`[${k.category||"عام"}] ${k.title}\n${k.content}`).join("\n\n---\n\n");
-  const fileCtx = S.files
-    .filter(f=>f.extracted_text?.length>20)
-    .map(f=>`[ملف: ${f.original_name} — مجلد: ${f.category||"عام"}]\n${f.extracted_text.substring(0,4000)}`)
-    .join("\n\n---\n\n");
-  const context = [kbCtx, fileCtx].filter(Boolean).join("\n\n══════════\n\n");
-
   const res = await fetch("/api/chat", {
     method:"POST",
     headers:{"Content-Type":"application/json"},
-    body: JSON.stringify({question, context})
+    body: JSON.stringify({
+      question,
+      files: S.files.map(f=>({
+        original_name: f.original_name,
+        category: f.category || "عام",
+        extracted_text: f.extracted_text || ""
+      })),
+      knowledge: S.knowledge
+    })
   });
   const d = await res.json();
   if(!res.ok) throw new Error(d.error || `HTTP ${res.status}`);
