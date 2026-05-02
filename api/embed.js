@@ -10,7 +10,7 @@ module.exports = async function handler(req, res) {
 
   const OPENAI_KEY = process.env.OPENAI_API_KEY;
   const SB_URL     = process.env.SUPABASE_URL;
-  const SB_KEY     = process.env.SUPABASE_SERVICE_KEY;
+  const SB_KEY     = process.env.SUPABASE_SERVICE_ROLE_KEY;
 
   if (!OPENAI_KEY) return res.status(500).json({error:"Missing OPENAI_API_KEY"});
   if (!SB_URL)     return res.status(500).json({error:"Missing SUPABASE_URL"});
