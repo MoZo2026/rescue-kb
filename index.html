@@ -274,7 +274,36 @@ async function loadFiles(){
   catch(e){notif("خطأ: "+e.message);}
   S.filesLoading=false;render();
 }
-async function loadAll(){await Promise.all([loadFolders(),loadFiles()]);}
+async function loadAll(){await Promise.all([loadFolders(),loadFiles(),loadPendingQs()]);}
+
+async function loadPendingQs(){
+  const db=getSB();if(!db)return;
+  const{data}=await db.from("pending_questions").select("*").order("created_at",{ascending:false});
+  S.pendingQs=data||[];
+}
+
+async function savePendingQ(question){
+  const db=getSB();if(!db)return;
+  const{data}=await db.from("pending_questions").insert({question,answered:false,answer:""}).select();
+  if(data) S.pendingQs.unshift(data[0]);
+}
+
+async function answerPendingDB(id){
+  const ans=document.getElementById("ans-"+id)?.value?.trim();
+  if(!ans)return;
+  const db=getSB();if(!db)return;
+  await db.from("pending_questions").update({answered:true,answer:ans}).eq("id",id);
+  const i=S.pendingQs.findIndex(q=>q.id===id);
+  if(i!==-1){S.pendingQs[i].answered=true;S.pendingQs[i].answer=ans;}
+  notif("تم الرد بنجاح ✅");render();
+}
+
+async function deletePendingDB(id){
+  const db=getSB();if(!db)return;
+  await db.from("pending_questions").delete().eq("id",id);
+  S.pendingQs=S.pendingQs.filter(q=>q.id!==id);
+  notif("حُذف");render();
+}
 
 async function uploadFiles(fileList){
   if(!fileList?.length)return;
@@ -373,10 +402,29 @@ function filteredFiles(){return S.activeFolder==="الكل"?S.files:S.files.filt
 function folderCount(name){return S.files.filter(f=>f.category===name).length;}
 
 async function sendMsg(){
-  const q=S.inp.trim();if(!q||S.chatLoading)return;
-  S.inp="";S.msgs.push({r:"user",t:q});S.chatLoading=true;render();scrollEnd();
-  try{const a=await askAI(q);S.msgs.push({r:"bot",t:a});}
-  catch(e){S.msgs.push({r:"bot",t:`خطأ: ${e.message}`});}
+  const q=S.inp.trim();
+  if((!q&&!S.pendingImages.length)||S.chatLoading)return;
+  const imgs=[...S.pendingImages];
+  S.inp="";S.pendingImages=[];
+  const userContent=q+(imgs.length?` [+${imgs.length} صورة]`:"");
+  S.msgs.push({r:"user",t:userContent,imgs:imgs.map(i=>i.preview)});
+  S.chatLoading=true;render();scrollEnd();
+  try{
+    const imgData=await Promise.all(imgs.map(img=>new Promise((res,rej)=>{
+      const reader=new FileReader();
+      reader.onload=e=>res(e.target.result.split(",")[1]);
+      reader.onerror=rej;
+      reader.readAsDataURL(img.file);
+    })));
+    const a=await askAI(q||"صف هذه الصورة واشرحها في سياق NARS",imgData);
+    if(a==="__PENDING__"){
+      await savePendingQ(q);
+      S.msgs.push({r:"bot",t:"سيتم موافاتك بالإجابة قريباً ✅
+تم حفظ سؤالك.",pending:true});
+    } else {
+      S.msgs.push({r:"bot",t:a});
+    }
+  }catch(e){S.msgs.push({r:"bot",t:"خطأ: "+e.message});}
   S.chatLoading=false;render();scrollEnd();
 }
 function scrollEnd(){setTimeout(()=>document.getElementById("me")?.scrollIntoView({behavior:"smooth"}),60);}
@@ -579,6 +627,17 @@ function ev(){
   g("se-btn")?.addEventListener("click",()=>{S.editEntry={...S.editEntry,category:gv("fc"),title:gv("ft"),content:gv("fco"),tags:gv("ftg")};saveEdit();});
   document.querySelectorAll(".ae").forEach(b=>b.addEventListener("click",()=>{S.editEntry={...S.knowledge.find(k=>k.id===Number(b.dataset.id))};S.showAddForm=false;render();setTimeout(()=>g("ft")?.scrollIntoView({behavior:"smooth"}),60);}));
   document.querySelectorAll(".ad").forEach(b=>b.addEventListener("click",()=>delEntry(Number(b.dataset.id))));
+  // Image input handler
+  const imgEl=document.getElementById("img-inp");
+  if(imgEl){
+    imgEl.addEventListener("change",function(e){
+      Array.from(e.target.files||[]).forEach(function(file){
+        S.pendingImages.push({file:file,preview:URL.createObjectURL(file)});
+      });
+      this.value="";
+      render();
+    });
+  }
 }
 function doLogin(){
   if(S.pw===CFG.ADMIN_PW){S.auth=true;S.pwErr="";S.view="files";loadAll();}
