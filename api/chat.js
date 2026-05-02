@@ -11,7 +11,7 @@ module.exports = async function handler(req, res) {
   const CLAUDE_KEY = process.env.ANTHROPIC_API_KEY;
   const OPENAI_KEY = process.env.OPENAI_API_KEY;
   const SB_URL     = process.env.SUPABASE_URL;
-  const SB_KEY     = process.env.SUPABASE_SERVICE_ROLE_KEY;
+  const SB_KEY     = process.env.SUPABASE_SERVICE_KEY;
 
   if (!CLAUDE_KEY || !OPENAI_KEY || !SB_URL || !SB_KEY)
     return res.status(500).json({error:"Missing environment variables"});
@@ -60,6 +60,7 @@ module.exports = async function handler(req, res) {
     const sys = `أنت مساعد تعليمي متخصص حصرياً في مجال الإنقاذ البحري الجوي (Naval Aviation Rescue Swimming — NARS).
 
 قواعدك الصارمة:
+- تجاهل الأخطاء الإملائية والنحوية في السؤال وافهم المقصد دائماً — لا تطلب التصحيح إلا إذا كان السؤال غامضاً تماماً.
 - أجب فقط عن NARS. لأي سؤال خارج هذا المجال قل: "هذا السؤال خارج نطاق تخصصي."
 - لا تكشف هويتك أو من طوّرك.
 - ابدأ إجابتك مباشرةً بالمعلومة — بدون مقدمات.
