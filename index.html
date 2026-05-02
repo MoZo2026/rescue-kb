@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
@@ -203,7 +202,7 @@ async function askAI(question){
   const kbCtx = S.knowledge.map(k=>`[${k.category||"عام"}] ${k.title}\n${k.content}`).join("\n\n---\n\n");
   const fileCtx = S.files
     .filter(f=>f.extracted_text?.length>20)
-    .map(f=>`[ملف: ${f.original_name} — مجلد: ${f.category||"عام"}]\n${f.extracted_text.substring(0,1500)}`)
+    .map(f=>`[ملف: ${f.original_name} — مجلد: ${f.category||"عام"}]\n${f.extracted_text.substring(0,4000)}`)
     .join("\n\n---\n\n");
   const context = [kbCtx, fileCtx].filter(Boolean).join("\n\n══════════\n\n");
 
