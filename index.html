@@ -468,6 +468,7 @@ function html(){return`
     ${S.view==="files"?buildFiles():""}
     ${S.view==="login"?buildLogin():""}
     ${S.view==="admin"?buildAdmin():""}
+    ${S.view==="pending"?buildPending():""}
   </div>`;}
 
 function buildChat(){
@@ -551,6 +552,36 @@ function buildModal(){const m=S.modal;
     <div class="fg"><label class="fl">المجلد</label><select class="fi" id="move-folder-sel"><option value="">-- اختر --</option><option value="عام">📁 عام</option>${S.folders.map(f=>`<option value="${esc(f.name)}">📁 ${esc(f.name)}</option>`).join("")}</select></div>
     <div class="modal-btns"><button class="btn bo" id="modal-cancel">إلغاء</button><button class="btn bg" id="modal-confirm">نقل</button></div></div></div>`;
   return"";}
+
+
+function buildPending(){
+  const unanswered=S.pendingQs.filter(q=>!q.answered);
+  const answered=S.pendingQs.filter(q=>q.answered);
+  return`<div style="flex:1;overflow-y:auto;padding:18px;direction:rtl">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
+      <div style="font-size:15px;font-weight:700;color:var(--gold2)">❓ الأسئلة المعلقة</div>
+      <span style="font-size:12px;color:var(--muted)">${unanswered.length} بانتظار الرد</span>
+    </div>
+    ${unanswered.length===0?`<div style="text-align:center;padding:40px;color:var(--muted)">✅ لا توجد أسئلة معلقة</div>`:""}
+    ${unanswered.map(q=>`
+      <div style="background:var(--card);border:1px solid var(--border2);border-radius:12px;padding:16px;margin-bottom:12px;box-shadow:var(--shadow)">
+        <div style="display:flex;justify-content:space-between;margin-bottom:8px">
+          <span style="background:#fff0d0;border:1px solid #d4a020;color:#8b6914;border-radius:10px;padding:2px 8px;font-size:11px">جديد</span>
+          <button class="btn bd bsm" onclick="deletePendingDB('${q.id}')">🗑️</button>
+        </div>
+        <div style="font-size:14px;font-weight:600;color:var(--text);margin-bottom:6px;direction:rtl">${esc(q.question)}</div>
+        <div style="font-size:11px;color:var(--muted);margin-bottom:10px;font-family:monospace">${new Date(q.created_at).toLocaleString("ar-SA")}</div>
+        <textarea id="ans-${q.id}" style="width:100%;background:var(--input);border:1px solid var(--border);border-radius:8px;padding:10px;color:var(--text);font-size:13px;font-family:'Noto Sans Arabic',sans-serif;outline:none;resize:vertical;min-height:80px;direction:rtl;margin-bottom:8px" placeholder="اكتب الإجابة هنا..."></textarea>
+        <button class="btn bg bsm" onclick="answerPendingDB('${q.id}')">إرسال الرد ✓</button>
+      </div>`).join("")}
+    ${answered.length>0?`
+      <div style="margin-top:20px;font-size:13px;font-weight:700;color:var(--muted)">تم الرد عليها (${answered.length})</div>
+      ${answered.slice(0,5).map(q=>`
+        <div style="background:var(--card);border:1px solid var(--border2);border-radius:10px;padding:12px;margin-top:8px;opacity:.7">
+          <div style="font-size:13px;font-weight:600;direction:rtl">${esc(q.question)}</div>
+          <div style="font-size:12px;color:var(--success);margin-top:6px;direction:rtl">✅ ${esc(q.answer)}</div>
+        </div>`).join("")}`:""}
+  </div>`;}
 
 function buildLogin(){return`<div class="lw"><div class="lc">
   <div class="li2">🔐</div><div class="lt">لوحة التحكم</div>
