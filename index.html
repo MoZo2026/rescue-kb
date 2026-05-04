@@ -164,6 +164,8 @@ textarea.fi{resize:vertical;min-height:90px}
 @media(max-width:480px){.fsidebar{display:none}}
 .share-row{display:flex;gap:6px;margin-top:10px;flex-wrap:wrap}.share-row button{border:1px solid var(--border);background:var(--surface);color:var(--muted);border-radius:10px;padding:4px 9px;font-size:11px;cursor:pointer;font-family:"Noto Sans Arabic",sans-serif}.share-row button:hover{border-color:var(--gold);color:var(--gold)}
 
+.stage-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:12px}.data-card{background:var(--card);border:1px solid var(--border2);border-radius:14px;padding:14px;box-shadow:var(--shadow);direction:rtl}.data-title{font-size:15px;font-weight:800;color:var(--gold2);margin-bottom:8px}.data-meta{font-size:12px;color:var(--muted);margin-top:6px}.data-actions{display:flex;gap:7px;flex-wrap:wrap;margin-top:10px}.mini-select,.mini-input,.mini-text{width:100%;border:1px solid var(--border);background:var(--input);color:var(--text);border-radius:10px;padding:9px;font-family:"Noto Sans Arabic",sans-serif}.mini-text{min-height:90px;resize:vertical}.toolbar{display:flex;gap:8px;align-items:center;justify-content:space-between;margin-bottom:14px;flex-wrap:wrap;direction:rtl}.pill{display:inline-block;border:1px solid var(--border);background:var(--surface);border-radius:999px;padding:3px 9px;font-size:12px;color:var(--muted)}.pill.ok{color:var(--success);border-color:#2a6a4040}.pill.warn{color:var(--danger);border-color:#c0585840}.empty-box{text-align:center;padding:34px;color:var(--muted);background:var(--card);border:1px solid var(--border2);border-radius:14px}.section-wrap{flex:1;overflow-y:auto;padding:18px;direction:rtl}.two-col{display:grid;grid-template-columns:1fr 1fr;gap:12px}@media(max-width:760px){.two-col{grid-template-columns:1fr}.nav{overflow-x:auto;max-width:100%}.nb{font-size:12px;padding:6px 9px}}
+
 .auth-card{max-width:440px;margin:34px auto;background:var(--card);border:1px solid var(--border2);border-radius:18px;box-shadow:var(--shadow);padding:22px;direction:rtl}.auth-title{font-size:19px;font-weight:800;color:var(--gold2);margin-bottom:6px}.auth-sub{font-size:12px;color:var(--muted);margin-bottom:16px}.auth-row{display:flex;gap:8px;margin-bottom:12px}.auth-tab{flex:1;border:1px solid var(--border);background:var(--surface);color:var(--muted);border-radius:12px;padding:9px;cursor:pointer;font-family:"Noto Sans Arabic",sans-serif}.auth-tab.act{background:var(--gold);color:#fff;border-color:var(--gold)}.auth-field{margin-bottom:10px}.auth-field label{display:block;font-size:12px;color:var(--muted);margin-bottom:5px}.auth-field input{width:100%;box-sizing:border-box;border:1px solid var(--border);background:var(--surface);color:var(--text);border-radius:12px;padding:10px;font-family:"Noto Sans Arabic",sans-serif}.auth-error{background:#ffe9e9;color:#9b1c1c;border:1px solid #ffc7c7;border-radius:10px;padding:9px;font-size:12px;margin:8px 0}.auth-note{background:var(--surface);border:1px solid var(--border2);border-radius:12px;padding:10px;font-size:12px;color:var(--muted);line-height:1.7}.profile-card{max-width:640px;margin:22px auto;background:var(--card);border:1px solid var(--border2);border-radius:18px;box-shadow:var(--shadow);padding:20px;direction:rtl}.role-badge{display:inline-block;background:var(--surface);border:1px solid var(--border);border-radius:999px;padding:4px 10px;color:var(--gold2);font-size:12px;margin-top:6px}.login-required{background:var(--surface);border-top:1px solid var(--border2);padding:10px 16px;text-align:center;color:var(--muted);font-size:13px;direction:rtl}.login-required button{margin-right:8px}
 </style>
 </head>
@@ -199,6 +201,10 @@ let S={
   view:"chat",auth:false,user:null,profile:null,session:null,authMode:"signin",authEmail:"",authPassword:"",authName:"",authErr:"",profileMsg:"",
   msgs:[],inp:"",chatLoading:false,
   pendingQs:[],pendingImages:[],
+  users:[],usersLoading:false,
+  messages:[],messagesLoading:false,messageSubject:"",messageText:"",
+  notes:[],notesLoading:false,noteTitle:"",noteText:"",
+  shares:[],sharesLoading:false,shareTitle:"",shareContent:"",
   stats:null,statsLoading:false,
   files:[],filesLoading:false,folders:[],
   activeFolder:"الكل",selected:new Set(),
@@ -586,11 +592,12 @@ function html(){return`
       ${canManage()
         ?`<button class="nb ${S.view==="files"?"act":""}" id="nv-files">📁 الملفات</button>
           <button class="nb ${S.view==="pending"?"act":""}" id="nv-pending">❓ الأسئلة${S.pendingQs&&S.pendingQs.filter(q=>!q.answered).length>0?' <span style="background:var(--danger);color:#fff;border-radius:10px;padding:1px 6px;font-size:12px">'+S.pendingQs.filter(q=>!q.answered).length+'</span>':""}</button>
+          <button class="nb ${S.view==="users"?"act":""}" id="nv-users">👥 المستخدمون</button>
           <button class="nb ${S.view==="stats"?"act":""}" id="nv-stats">📊 الإحصائيات</button>
           <button class="nb ${S.view==="admin"?"act":""}" id="nv-admin">⚙️ إدارة</button>`
         :""}
       ${S.user
-        ?`<button class="nb ${S.view==="profile"?"act":""}" id="nv-profile">👤 ${esc(S.profile?.display_name||S.user.email||"حسابي")}</button><button class="nb" id="nv-out">خروج</button>`
+        ?`<button class="nb ${S.view==="messages"?"act":""}" id="nv-messages">✉️ الرسائل</button><button class="nb ${S.view==="notes"?"act":""}" id="nv-notes">📝 ملاحظاتي</button><button class="nb ${S.view==="shares"?"act":""}" id="nv-shares">📨 مشاركة</button><button class="nb ${S.view==="profile"?"act":""}" id="nv-profile">👤 ${esc(S.profile?.display_name||S.user.email||"حسابي")}</button><button class="nb" id="nv-out">خروج</button>`
         :`<button class="nb ${S.view==="login"?"act":""}" id="nv-login">🔐 دخول</button>`}
           <button onclick="toggleTheme()" style="width:32px;height:32px;border-radius:50%;border:1px solid var(--border);background:transparent;cursor:pointer;font-size:17px;display:flex;align-items:center;justify-content:center;" title="تبديل الثيم" id="theme-btn">${isDark()?"☀️":"🌙"}</button>
     </div>
@@ -602,6 +609,10 @@ function html(){return`
     ${S.view==="admin"?buildAdmin():""}
     ${S.view==="pending"?buildPending():""}
     ${S.view==="stats"?buildStats():""}
+    ${S.view==="users"?buildUsers():""}
+    ${S.view==="messages"?buildMessages():""}
+    ${S.view==="notes"?buildNotes():""}
+    ${S.view==="shares"?buildShares():""}
     ${S.view==="profile"?buildProfile():""}
   </div>`;}
 
@@ -622,7 +633,7 @@ function shareMsg(platform,idx){
 async function loadStats(){
   S.statsLoading=true;render();
   try{
-    const r=await fetch("/api/stats");
+    const r=await fetch("/api/stats",{headers:{...authHeaders()}});
     const d=await r.json();
     if(!r.ok)throw new Error(d.error||"تعذر تحميل الإحصائيات");
     S.stats=d;
@@ -632,7 +643,7 @@ async function loadStats(){
 
 async function checkImageQuotaBeforeSelect(count){
   try{
-    const r=await fetch("/api/image-quota");
+    const r=await fetch("/api/image-quota",{headers:{...authHeaders()}});
     const d=await r.json();
     if(!r.ok)throw new Error(d.error||"تعذر فحص حد الصور");
     if(count>d.remaining){
@@ -802,6 +813,65 @@ function buildProfile(){
     <div style="display:flex;gap:8px;margin-top:16px"><button class="btn bg" id="save-profile-btn">حفظ</button><button class="btn bo" id="profile-chat-btn">العودة للمحادثة</button></div>
   </div>`;}
 
+
+async function apiJSON(url, options={}){
+  const r=await fetch(url,{...options,headers:{"Content-Type":"application/json",...authHeaders(),...(options.headers||{})}});
+  const d=await r.json().catch(()=>({}));
+  if(!r.ok)throw new Error(d.error||"تعذر تنفيذ الطلب");
+  return d;
+}
+
+async function loadUsers(){S.usersLoading=true;S.view="users";render();try{const d=await apiJSON('/api/users');S.users=d.users||[];}catch(e){notif('خطأ المستخدمين: '+e.message);}S.usersLoading=false;render();}
+async function updateUserRole(id,role){try{await apiJSON('/api/users',{method:'PATCH',body:JSON.stringify({id,role})});notif('تم تحديث الصلاحية');await loadUsers();}catch(e){notif('خطأ: '+e.message);}}
+async function updateUserStatus(id,status){try{await apiJSON('/api/users',{method:'PATCH',body:JSON.stringify({id,status})});notif('تم تحديث الحالة');await loadUsers();}catch(e){notif('خطأ: '+e.message);}}
+
+async function loadMessages(){S.messagesLoading=true;S.view="messages";render();try{const d=await apiJSON('/api/messages');S.messages=d.messages||[];}catch(e){notif('خطأ الرسائل: '+e.message);}S.messagesLoading=false;render();}
+async function sendInternalMessage(){const subject=gv('msg-subject'),message=gv('msg-text');if(!message.trim()){notif('اكتب نص الرسالة');return;}try{await apiJSON('/api/messages',{method:'POST',body:JSON.stringify({subject,message})});S.messageSubject='';S.messageText='';notif('تم إرسال الرسالة');await loadMessages();}catch(e){notif('خطأ: '+e.message);}}
+async function replyMessage(id){const reply=gv('reply-'+id);if(!reply.trim()){notif('اكتب الرد');return;}try{await apiJSON('/api/messages',{method:'PATCH',body:JSON.stringify({id,reply,status:'replied'})});notif('تم إرسال الرد');await loadMessages();}catch(e){notif('خطأ: '+e.message);}}
+async function closeMessage(id){try{await apiJSON('/api/messages',{method:'PATCH',body:JSON.stringify({id,status:'closed'})});notif('تم إغلاق الرسالة');await loadMessages();}catch(e){notif('خطأ: '+e.message);}}
+
+async function loadNotes(){S.notesLoading=true;S.view="notes";render();try{const d=await apiJSON('/api/notes');S.notes=d.notes||[];}catch(e){notif('خطأ الملاحظات: '+e.message);}S.notesLoading=false;render();}
+async function addNote(){const title=gv('note-title'),note=gv('note-text');if(!note.trim()){notif('اكتب الملاحظة');return;}try{await apiJSON('/api/notes',{method:'POST',body:JSON.stringify({title,note})});S.noteTitle='';S.noteText='';notif('تم حفظ الملاحظة');await loadNotes();}catch(e){notif('خطأ: '+e.message);}}
+async function deleteNote(id){if(!confirm('حذف هذه الملاحظة؟'))return;try{await apiJSON('/api/notes?id='+encodeURIComponent(id),{method:'DELETE'});notif('تم حذف الملاحظة');await loadNotes();}catch(e){notif('خطأ: '+e.message);}}
+
+async function loadShares(){S.sharesLoading=true;S.view="shares";render();try{const d=await apiJSON('/api/shares');S.shares=d.shares||[];}catch(e){notif('خطأ المشاركات: '+e.message);}S.sharesLoading=false;render();}
+async function submitShare(){const title=gv('share-title'),content=gv('share-content');if(!content.trim()){notif('اكتب المعلومة المقترحة');return;}try{await apiJSON('/api/shares',{method:'POST',body:JSON.stringify({title,content})});S.shareTitle='';S.shareContent='';notif('تم إرسال المعلومة للمراجعة');await loadShares();}catch(e){notif('خطأ: '+e.message);}}
+async function reviewShare(id,status){const admin_comment=gv('share-comment-'+id)||'';try{await apiJSON('/api/shares',{method:'PATCH',body:JSON.stringify({id,status,admin_comment})});notif(status==='approved'?'تم اعتماد المعلومة':'تم رفض المعلومة');await loadShares();}catch(e){notif('خطأ: '+e.message);}}
+
+function buildUsers(){
+  if(!canManage())return `<div class="section-wrap"><div class="empty-box">هذه الصفحة للمسئول أو المعلم فقط.</div></div>`;
+  const rows=(S.users||[]).map(u=>`<div class="data-card">
+    <div class="data-title">${esc(u.display_name||u.email||'مستخدم')}</div>
+    <div class="data-meta" dir="ltr">${esc(u.email||'')}</div>
+    <div class="two-col" style="margin-top:10px">
+      <div><label class="data-meta">الدور</label><select class="mini-select user-role" data-id="${u.id}"><option value="student" ${u.role==='student'?'selected':''}>student</option><option value="instructor" ${u.role==='instructor'?'selected':''}>instructor</option><option value="admin" ${u.role==='admin'?'selected':''}>admin</option></select></div>
+      <div><label class="data-meta">الحالة</label><select class="mini-select user-status" data-id="${u.id}"><option value="active" ${u.status==='active'?'selected':''}>active</option><option value="suspended" ${u.status==='suspended'?'selected':''}>suspended</option></select></div>
+    </div>
+    <div class="data-meta">تاريخ التسجيل: ${fmtDate(u.created_at)}</div>
+  </div>`).join('');
+  return `<div class="section-wrap"><div class="toolbar"><div><div class="atitle">👥 إدارة المستخدمين</div><div class="data-meta">تغيير صلاحيات الطلاب والمعلمين من داخل الموقع</div></div><button class="btn bg" id="refresh-users">تحديث</button></div>${S.usersLoading?`<div class="empty-box">جاري التحميل...</div>`:rows?`<div class="stage-grid">${rows}</div>`:`<div class="empty-box">لا يوجد مستخدمون</div>`}</div>`;
+}
+
+function buildMessages(){
+  const isMgr=canManage();
+  const form=!isMgr?`<div class="data-card" style="margin-bottom:12px"><div class="data-title">✉️ رسالة إلى مدير النظام</div><input class="mini-input" id="msg-subject" placeholder="الموضوع" value="${esc(S.messageSubject)}" style="margin-bottom:8px"><textarea class="mini-text" id="msg-text" placeholder="اكتب رسالتك أو طلب التوضيح">${esc(S.messageText)}</textarea><div class="data-actions"><button class="btn bg" id="send-message-btn">إرسال</button></div></div>`:`<div class="auth-note" style="margin-bottom:12px">تعرض هذه الصفحة رسائل المستخدمين المفتوحة والسابقة.</div>`;
+  const cards=(S.messages||[]).map(m=>`<div class="data-card"><div style="display:flex;justify-content:space-between;gap:8px"><div class="data-title">${esc(m.subject||'بدون موضوع')}</div><span class="pill ${m.status==='closed'?'ok':m.status==='new'?'warn':''}">${esc(m.status||'new')}</span></div><div style="white-space:pre-wrap;line-height:1.8">${esc(m.message)}</div><div class="data-meta">من: ${esc(m.sender_email||'-')} · ${fmtDate(m.created_at)}</div>${m.reply?`<div class="auth-note" style="margin-top:10px"><b>الرد:</b><br>${esc(m.reply)}</div>`:''}${isMgr&&m.status!=='closed'?`<textarea class="mini-text" id="reply-${m.id}" placeholder="اكتب الرد...">${esc(m.reply||'')}</textarea><div class="data-actions"><button class="btn bg bsm reply-msg" data-id="${m.id}">إرسال الرد</button><button class="btn bo bsm close-msg" data-id="${m.id}">إغلاق</button></div>`:''}</div>`).join('');
+  return `<div class="section-wrap"><div class="toolbar"><div><div class="atitle">✉️ صندوق الرسائل</div><div class="data-meta">تواصل داخلي بين الطلاب والمسئول</div></div><button class="btn bo" id="refresh-messages">تحديث</button></div>${form}${S.messagesLoading?`<div class="empty-box">جاري التحميل...</div>`:cards?`<div class="stage-grid">${cards}</div>`:`<div class="empty-box">لا توجد رسائل</div>`}</div>`;
+}
+
+function buildNotes(){
+  const form=`<div class="data-card" style="margin-bottom:12px"><div class="data-title">📝 ملاحظة جديدة</div><input class="mini-input" id="note-title" placeholder="عنوان اختياري" value="${esc(S.noteTitle)}" style="margin-bottom:8px"><textarea class="mini-text" id="note-text" placeholder="اكتب ملاحظتك الخاصة">${esc(S.noteText)}</textarea><div class="data-actions"><button class="btn bg" id="add-note-btn">حفظ الملاحظة</button></div></div>`;
+  const cards=(S.notes||[]).map(n=>`<div class="data-card"><div style="display:flex;justify-content:space-between;gap:8px"><div class="data-title">${esc(n.title||'ملاحظة')}</div><button class="btn bd bsm del-note" data-id="${n.id}">حذف</button></div><div style="white-space:pre-wrap;line-height:1.8">${esc(n.note)}</div><div class="data-meta">${fmtDate(n.created_at)}</div></div>`).join('');
+  return `<div class="section-wrap"><div class="toolbar"><div><div class="atitle">📝 ملاحظاتي</div><div class="data-meta">ملاحظات خاصة مرتبطة بحسابك فقط</div></div><button class="btn bo" id="refresh-notes">تحديث</button></div>${form}${S.notesLoading?`<div class="empty-box">جاري التحميل...</div>`:cards?`<div class="stage-grid">${cards}</div>`:`<div class="empty-box">لا توجد ملاحظات</div>`}</div>`;
+}
+
+function buildShares(){
+  const form=`<div class="data-card" style="margin-bottom:12px"><div class="data-title">📨 مشاركة معلومة للمراجعة</div><input class="mini-input" id="share-title" placeholder="عنوان المعلومة" value="${esc(S.shareTitle)}" style="margin-bottom:8px"><textarea class="mini-text" id="share-content" placeholder="اكتب المعلومة أو التصحيح المقترح ليتم اعتمادها من المسئول">${esc(S.shareContent)}</textarea><div class="data-actions"><button class="btn bg" id="submit-share-btn">إرسال للمراجعة</button></div></div>`;
+  const isMgr=canManage();
+  const cards=(S.shares||[]).map(x=>`<div class="data-card"><div style="display:flex;justify-content:space-between;gap:8px"><div class="data-title">${esc(x.title||'معلومة مقترحة')}</div><span class="pill ${x.status==='approved'?'ok':x.status==='rejected'?'warn':''}">${esc(x.status||'pending')}</span></div><div style="white-space:pre-wrap;line-height:1.8">${esc(x.content)}</div><div class="data-meta">من: ${esc(x.user_email||'-')} · ${fmtDate(x.created_at)}</div>${x.admin_comment?`<div class="auth-note" style="margin-top:10px"><b>ملاحظة المسئول:</b><br>${esc(x.admin_comment)}</div>`:''}${isMgr&&x.status==='pending'?`<textarea class="mini-text" id="share-comment-${x.id}" placeholder="تعليق اختياري للمستخدم"></textarea><div class="data-actions"><button class="btn bg bsm approve-share" data-id="${x.id}">اعتماد</button><button class="btn bd bsm reject-share" data-id="${x.id}">رفض</button></div>`:''}</div>`).join('');
+  return `<div class="section-wrap"><div class="toolbar"><div><div class="atitle">📨 مشاركة المعلومات</div><div class="data-meta">اقتراح معلومات وتصحيحات ثم مراجعتها قبل اعتمادها</div></div><button class="btn bo" id="refresh-shares">تحديث</button></div>${!isMgr?form:`<div class="auth-note" style="margin-bottom:12px">يمكنك مراجعة المعلومات المقترحة واعتمادها أو رفضها.</div>`}${S.sharesLoading?`<div class="empty-box">جاري التحميل...</div>`:cards?`<div class="stage-grid">${cards}</div>`:`<div class="empty-box">لا توجد مشاركات</div>`}</div>`;
+}
+
 function buildAdmin(){
   const list=S.knowledge.map(k=>`<div class="acard"><div class="ach">
     <div style="flex:1"><span class="abadge">${esc(k.category||"عام")}</span>
@@ -833,7 +903,25 @@ function ev(){
   g("nv-admin")?.addEventListener("click",()=>{S.view="admin";render();});
   g("nv-stats")?.addEventListener("click",()=>{S.view="stats";loadStats();});
   g("nv-pending")?.addEventListener("click",()=>{S.view="pending";loadPendingQs().then(render);});
+  g("nv-users")?.addEventListener("click",loadUsers);
+  g("nv-messages")?.addEventListener("click",loadMessages);
+  g("nv-notes")?.addEventListener("click",loadNotes);
+  g("nv-shares")?.addEventListener("click",loadShares);
   g("refresh-stats")?.addEventListener("click",loadStats);
+  g("refresh-users")?.addEventListener("click",loadUsers);
+  g("refresh-messages")?.addEventListener("click",loadMessages);
+  g("refresh-notes")?.addEventListener("click",loadNotes);
+  g("refresh-shares")?.addEventListener("click",loadShares);
+  g("send-message-btn")?.addEventListener("click",sendInternalMessage);
+  g("add-note-btn")?.addEventListener("click",addNote);
+  g("submit-share-btn")?.addEventListener("click",submitShare);
+  document.querySelectorAll(".user-role").forEach(x=>x.addEventListener("change",()=>updateUserRole(x.dataset.id,x.value)));
+  document.querySelectorAll(".user-status").forEach(x=>x.addEventListener("change",()=>updateUserStatus(x.dataset.id,x.value)));
+  document.querySelectorAll(".reply-msg").forEach(b=>b.addEventListener("click",()=>replyMessage(b.dataset.id)));
+  document.querySelectorAll(".close-msg").forEach(b=>b.addEventListener("click",()=>closeMessage(b.dataset.id)));
+  document.querySelectorAll(".del-note").forEach(b=>b.addEventListener("click",()=>deleteNote(b.dataset.id)));
+  document.querySelectorAll(".approve-share").forEach(b=>b.addEventListener("click",()=>reviewShare(b.dataset.id,'approved')));
+  document.querySelectorAll(".reject-share").forEach(b=>b.addEventListener("click",()=>reviewShare(b.dataset.id,'rejected')));
   g("nv-login")?.addEventListener("click",()=>{S.view="login";S.authErr="";render();});
   g("chat-login-btn")?.addEventListener("click",()=>{S.view="login";render();});
   g("nv-profile")?.addEventListener("click",()=>{S.view="profile";S.profileMsg="";render();});
