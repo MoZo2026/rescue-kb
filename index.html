@@ -163,6 +163,8 @@ textarea.fi{resize:vertical;min-height:90px}
 @media(max-width:640px){.fsidebar{width:150px}.htitle{font-size:12px}.nb{padding:5px 8px;font-size:12px}.fgrid{grid-template-columns:repeat(auto-fill,minmax(130px,1fr))}.bub{max-width:88%}}
 @media(max-width:480px){.fsidebar{display:none}}
 .share-row{display:flex;gap:6px;margin-top:10px;flex-wrap:wrap}.share-row button{border:1px solid var(--border);background:var(--surface);color:var(--muted);border-radius:10px;padding:4px 9px;font-size:11px;cursor:pointer;font-family:"Noto Sans Arabic",sans-serif}.share-row button:hover{border-color:var(--gold);color:var(--gold)}
+
+.auth-card{max-width:440px;margin:34px auto;background:var(--card);border:1px solid var(--border2);border-radius:18px;box-shadow:var(--shadow);padding:22px;direction:rtl}.auth-title{font-size:19px;font-weight:800;color:var(--gold2);margin-bottom:6px}.auth-sub{font-size:12px;color:var(--muted);margin-bottom:16px}.auth-row{display:flex;gap:8px;margin-bottom:12px}.auth-tab{flex:1;border:1px solid var(--border);background:var(--surface);color:var(--muted);border-radius:12px;padding:9px;cursor:pointer;font-family:"Noto Sans Arabic",sans-serif}.auth-tab.act{background:var(--gold);color:#fff;border-color:var(--gold)}.auth-field{margin-bottom:10px}.auth-field label{display:block;font-size:12px;color:var(--muted);margin-bottom:5px}.auth-field input{width:100%;box-sizing:border-box;border:1px solid var(--border);background:var(--surface);color:var(--text);border-radius:12px;padding:10px;font-family:"Noto Sans Arabic",sans-serif}.auth-error{background:#ffe9e9;color:#9b1c1c;border:1px solid #ffc7c7;border-radius:10px;padding:9px;font-size:12px;margin:8px 0}.auth-note{background:var(--surface);border:1px solid var(--border2);border-radius:12px;padding:10px;font-size:12px;color:var(--muted);line-height:1.7}.profile-card{max-width:640px;margin:22px auto;background:var(--card);border:1px solid var(--border2);border-radius:18px;box-shadow:var(--shadow);padding:20px;direction:rtl}.role-badge{display:inline-block;background:var(--surface);border:1px solid var(--border);border-radius:999px;padding:4px 10px;color:var(--gold2);font-size:12px;margin-top:6px}.login-required{background:var(--surface);border-top:1px solid var(--border2);padding:10px 16px;text-align:center;color:var(--muted);font-size:13px;direction:rtl}.login-required button{margin-right:8px}
 </style>
 </head>
 <body>
@@ -194,7 +196,7 @@ function getSB(){if(sb)return sb;try{sb=window.supabase?.createClient(CFG.SB_URL
 function initPDF(){if(window.pdfjsLib)pdfjsLib.GlobalWorkerOptions.workerSrc="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js";}
 
 let S={
-  view:"chat",auth:false,
+  view:"chat",auth:false,user:null,profile:null,session:null,authMode:"signin",authEmail:"",authPassword:"",authName:"",authErr:"",profileMsg:"",
   msgs:[],inp:"",chatLoading:false,
   pendingQs:[],pendingImages:[],
   stats:null,statsLoading:false,
@@ -208,6 +210,59 @@ let S={
   pw:"",pwErr:"",modal:null,notif:"",notifTimer:null,
 };
 function saveKB(){localStorage.setItem("kb_v3",JSON.stringify(S.knowledge));}
+
+function userRole(){return S.profile?.role||"guest";}
+function canManage(){return ["admin","instructor"].includes(userRole());}
+function authHeaders(){const token=S.session?.access_token;return token?{"Authorization":"Bearer "+token}:{};}
+async function initAuth(){
+  const db=getSB();
+  if(!db){render();return;}
+  try{
+    const {data}=await db.auth.getSession();
+    await applySession(data?.session||null,false);
+    db.auth.onAuthStateChange(async(_event,session)=>{await applySession(session,true);});
+  }catch(e){console.warn(e);render();}
+}
+async function applySession(session,rerender=true){
+  S.session=session||null;
+  S.user=session?.user||null;
+  if(S.user){await loadProfile(false);}else{S.profile=null;S.auth=false;}
+  if(rerender)render();
+}
+async function loadProfile(rerender=true){
+  if(!S.session?.access_token)return;
+  try{
+    const res=await fetch('/api/profile',{headers:{...authHeaders()}});
+    const data=await res.json();
+    if(!res.ok)throw new Error(data.error||'تعذر تحميل الملف الشخصي');
+    S.profile=data.profile;
+    S.auth=canManage();
+  }catch(e){S.authErr=e.message;}
+  if(rerender)render();
+}
+async function signIn(){
+  const db=getSB(); if(!db)return;
+  S.authErr=""; render();
+  const {error}=await db.auth.signInWithPassword({email:S.authEmail.trim(),password:S.authPassword});
+  if(error){S.authErr=error.message;render();}
+}
+async function signUp(){
+  const db=getSB(); if(!db)return;
+  S.authErr=""; render();
+  const {error}=await db.auth.signUp({email:S.authEmail.trim(),password:S.authPassword,options:{data:{display_name:S.authName.trim()}}});
+  if(error){S.authErr=error.message;render();return;}
+  S.authErr="تم إنشاء الحساب. إذا كان تأكيد البريد مفعّلًا، افتح بريدك واضغط رابط التأكيد ثم سجّل الدخول.";render();
+}
+async function signOut(){const db=getSB();if(db)await db.auth.signOut();S.session=null;S.user=null;S.profile=null;S.auth=false;S.view="chat";render();}
+async function saveProfile(){
+  if(!S.user)return;
+  const display_name=gv('profile-name');
+  const res=await fetch('/api/profile',{method:'POST',headers:{'Content-Type':'application/json',...authHeaders()},body:JSON.stringify({display_name})});
+  const data=await res.json();
+  if(res.ok){S.profile=data.profile;S.profileMsg='تم حفظ الملف الشخصي';}else{S.profileMsg=data.error||'تعذر الحفظ';}
+  render();
+}
+
 
 // ── RAG Chat ────────────────────────────────────────
 function buildChatHistory(limit=12){
@@ -233,7 +288,7 @@ function buildConversationSummary(maxChars=4000, recentLimit=12){
 
 async function askAI(question,images=[],history=buildChatHistory(12)){
   const res=await fetch("/api/chat",{
-    method:"POST",headers:{"Content-Type":"application/json"},
+    method:"POST",headers:{"Content-Type":"application/json",...authHeaders()},
     body:JSON.stringify({
       question,
       images,
@@ -372,7 +427,7 @@ async function uploadFiles(fileList){
       if(extracted&&extracted.length>50){
         S.uploadLabel=`فهرسة: ${file.name}`;render();
         await fetch("/api/embed",{
-          method:"POST",headers:{"Content-Type":"application/json"},
+          method:"POST",headers:{"Content-Type":"application/json",...authHeaders()},
           body:JSON.stringify({
             file_id:path,file_name:file.name,
             category:S.activeFolder==="الكل"?"عام":S.activeFolder,
@@ -444,6 +499,7 @@ function filteredFiles(){return S.activeFolder==="الكل"?S.files:S.files.filt
 function folderCount(name){return S.files.filter(f=>f.category===name).length;}
 
 async function sendMsg(){
+  if(!S.user){S.view="login";S.authErr="يرجى تسجيل الدخول لاستخدام المحادثة وحفظ سجل الأسئلة.";render();return;}
   const q=S.inp.trim();
   if((!q&&!S.pendingImages.length)||S.chatLoading)return;
   const imgs=[...S.pendingImages];
@@ -527,13 +583,15 @@ function html(){return`
     <div class="nav">
       <div class="sdot"></div>
       <button class="nb ${S.view==="chat"?"act":""}" id="nv-chat">💬 محادثة</button>
-      ${S.auth
+      ${canManage()
         ?`<button class="nb ${S.view==="files"?"act":""}" id="nv-files">📁 الملفات</button>
           <button class="nb ${S.view==="pending"?"act":""}" id="nv-pending">❓ الأسئلة${S.pendingQs&&S.pendingQs.filter(q=>!q.answered).length>0?' <span style="background:var(--danger);color:#fff;border-radius:10px;padding:1px 6px;font-size:12px">'+S.pendingQs.filter(q=>!q.answered).length+'</span>':""}</button>
           <button class="nb ${S.view==="stats"?"act":""}" id="nv-stats">📊 الإحصائيات</button>
-          <button class="nb ${S.view==="admin"?"act":""}" id="nv-admin">⚙️ إدارة</button>
-          <button class="nb" id="nv-out">خروج</button>`
-        :`<button class="nb ${S.view==="login"?"act":""}" id="nv-login">🔐 المسئول</button>`}
+          <button class="nb ${S.view==="admin"?"act":""}" id="nv-admin">⚙️ إدارة</button>`
+        :""}
+      ${S.user
+        ?`<button class="nb ${S.view==="profile"?"act":""}" id="nv-profile">👤 ${esc(S.profile?.display_name||S.user.email||"حسابي")}</button><button class="nb" id="nv-out">خروج</button>`
+        :`<button class="nb ${S.view==="login"?"act":""}" id="nv-login">🔐 دخول</button>`}
           <button onclick="toggleTheme()" style="width:32px;height:32px;border-radius:50%;border:1px solid var(--border);background:transparent;cursor:pointer;font-size:17px;display:flex;align-items:center;justify-content:center;" title="تبديل الثيم" id="theme-btn">${isDark()?"☀️":"🌙"}</button>
     </div>
   </div>
@@ -544,6 +602,7 @@ function html(){return`
     ${S.view==="admin"?buildAdmin():""}
     ${S.view==="pending"?buildPending():""}
     ${S.view==="stats"?buildStats():""}
+    ${S.view==="profile"?buildProfile():""}
   </div>`;}
 
 function shareMsg(platform,idx){
@@ -602,12 +661,13 @@ function buildChat(){
     <div class="sbar"><div class="si">📁 الملفات: <b>${S.files.length}</b></div><div class="si">🧠 البحث: <b>كل المراجع / الأحدث أولاً</b></div><div class="si">🖼️ الصور: <b>15 صورة يوميًا للموقع</b></div></div>
     <div class="msgs">${welcome}${msgs}${typing}<div id="me"></div></div>
     ${S.pendingImages.length?`<div class="pending-imgs">${S.pendingImages.map((img,i)=>`<div class="pending-img"><img src="${img.preview}" alt="صورة مرفقة"><button class="rm-img" data-i="${i}" title="إزالة">×</button></div>`).join("")}</div>`:""}
+    ${!S.user?`<div class="login-required">سجّل الدخول لاستخدام المحادثة وحفظ سجلك وملفك الشخصي. <button class="btn bg bsm" id="chat-login-btn">دخول</button></div>`:""}
     <div class="iarea">
       <label class="img-btn" title="إرفاق صورة" style="width:46px;height:46px;flex-shrink:0;background:var(--card);border:1px solid var(--border);border-radius:12px;cursor:pointer;font-size:19px;display:flex;align-items:center;justify-content:center;color:var(--muted);position:relative;overflow:hidden">
           📎<input type="file" id="img-inp" accept="image/*" multiple style="position:absolute;inset:0;opacity:0;cursor:pointer;width:100%;height:100%">
         </label>
-        <textarea class="ci" id="ci" placeholder="اكتب سؤالك هنا... / Ask your question..." rows="1" dir="auto" ${S.chatLoading?"disabled":""}>${esc(S.inp)}</textarea>
-      <button class="sbtn" id="sbtn" ${S.chatLoading||(!S.inp.trim()&&!S.pendingImages.length)?"disabled":""}>✈</button>
+        <textarea class="ci" id="ci" placeholder="اكتب سؤالك هنا... / Ask your question..." rows="1" dir="auto" ${S.chatLoading||!S.user?"disabled":""}>${esc(S.inp)}</textarea>
+      <button class="sbtn" id="sbtn" ${S.chatLoading||!S.user||(!S.inp.trim()&&!S.pendingImages.length)?"disabled":""}>✈</button>
     </div></div>`;}
 
 function buildFiles(){
@@ -645,9 +705,9 @@ function buildFiles(){
         <div style="display:flex;gap:6px;align-items:center">${S.filesLoading?`<div class="spin"></div>`:""}<button class="btn bo bsm" id="reload-btn">🔄</button></div>
       </div>
       <div class="upzone ${S.drag?"drag":""}" id="upzone">
-        <input type="file" id="file-input" multiple accept=".pdf,.jpg,.jpeg,.png,.gif,.webp,.ppt,.pptx,.doc,.docx,.xls,.xlsx,.mp4,.mov">
+        <input type="file" id="file-input" multiple accept=".pdf,.jpg,.jpeg,.png,.gif,.webp,.doc,.docx,.xls,.xlsx,.mp4,.mov">
         <div class="upzone-icon">📂</div>
-        <div class="upzone-text"><b>اسحب ملفاتك هنا أو اضغط للاختيار</b><br>PDF · صور · PPT · Word — يُفهرس تلقائياً للبحث الذكي</div>
+        <div class="upzone-text"><b>اسحب ملفاتك هنا أو اضغط للاختيار</b><br>PDF · صور · Word — يُفهرس تلقائياً للبحث الذكي</div>
       </div>
       ${S.uploading||S.uploadLabel?`<div class="prog-wrap"><div class="prog-bar"><div class="prog-fill" style="width:${S.uploadPct}%"></div></div><div class="prog-label">${esc(S.uploadLabel)}</div></div>`:""}
       ${S.selected.size>0?`<div class="selbar"><span>✓ ${S.selected.size} محدد</span>
@@ -717,14 +777,30 @@ function buildStats(){
     </div>
   </div>`;}
 
-function buildLogin(){return`<div class="lw"><div class="lc">
-  <div class="li2">🔐</div><div class="lt">لوحة التحكم</div>
-  <div class="ls">ADMIN CONTROL PANEL</div>
-  <input class="lin" id="pi" type="password" placeholder="كلمة المرور" value="${esc(S.pw)}">
-  ${S.pwErr?`<div class="lerr">${S.pwErr}</div>`:""}
-  <button class="lbtn" id="lbtn">دخول</button>
-  <div style="margin-top:14px;font-size:12px;color:#3a5a7a;font-family:monospace">للمسئول فقط · Admin Only</div>
-</div></div>`;}
+function buildLogin(){const isSignUp=S.authMode==="signup";return`<div class="auth-card">
+  <div class="auth-title">🔐 تسجيل الدخول</div>
+  <div class="auth-sub">حساب المستخدم يحفظ سجل الأسئلة والملاحظات والملف الشخصي.</div>
+  <div class="auth-row"><button class="auth-tab ${!isSignUp?"act":""}" id="auth-signin-tab">دخول</button><button class="auth-tab ${isSignUp?"act":""}" id="auth-signup-tab">حساب جديد</button></div>
+  ${isSignUp?`<div class="auth-field"><label>الاسم</label><input id="auth-name" value="${esc(S.authName)}" placeholder="الاسم الظاهر"></div>`:""}
+  <div class="auth-field"><label>البريد الإلكتروني</label><input id="auth-email" type="email" dir="ltr" value="${esc(S.authEmail)}" placeholder="name@example.com"></div>
+  <div class="auth-field"><label>كلمة المرور</label><input id="auth-password" type="password" dir="ltr" value="${esc(S.authPassword)}" placeholder="••••••••"></div>
+  ${S.authErr?`<div class="auth-error">${esc(S.authErr)}</div>`:""}
+  <button class="lbtn" id="auth-submit">${isSignUp?"إنشاء حساب":"دخول"}</button>
+  <div class="auth-note" style="margin-top:14px">الصلاحية الافتراضية للحساب الجديد: طالب. يمكن للمدير تغيير الدور إلى Instructor أو Admin من جدول user_profiles في Supabase.</div>
+</div>`;}
+
+
+function buildProfile(){
+  if(!S.user)return buildLogin();
+  return`<div class="profile-card">
+    <div class="auth-title">👤 الملف الشخصي</div>
+    <div class="auth-sub">بيانات الحساب مرتبطة بسجل الأسئلة والبحث.</div>
+    <div class="auth-field"><label>البريد الإلكتروني</label><input dir="ltr" value="${esc(S.user.email||"")}" disabled></div>
+    <div class="auth-field"><label>الاسم الظاهر</label><input id="profile-name" value="${esc(S.profile?.display_name||"")}" placeholder="اكتب اسم المستخدم"></div>
+    <div>الدور: <span class="role-badge">${esc(userRole())}</span></div>
+    ${S.profileMsg?`<div class="auth-note" style="margin-top:10px">${esc(S.profileMsg)}</div>`:""}
+    <div style="display:flex;gap:8px;margin-top:16px"><button class="btn bg" id="save-profile-btn">حفظ</button><button class="btn bo" id="profile-chat-btn">العودة للمحادثة</button></div>
+  </div>`;}
 
 function buildAdmin(){
   const list=S.knowledge.map(k=>`<div class="acard"><div class="ach">
@@ -758,11 +834,20 @@ function ev(){
   g("nv-stats")?.addEventListener("click",()=>{S.view="stats";loadStats();});
   g("nv-pending")?.addEventListener("click",()=>{S.view="pending";loadPendingQs().then(render);});
   g("refresh-stats")?.addEventListener("click",loadStats);
-  g("nv-login")?.addEventListener("click",()=>{S.view="login";S.pw="";S.pwErr="";render();});
-  g("nv-out")?.addEventListener("click",()=>{S.auth=false;S.view="chat";render();});
+  g("nv-login")?.addEventListener("click",()=>{S.view="login";S.authErr="";render();});
+  g("chat-login-btn")?.addEventListener("click",()=>{S.view="login";render();});
+  g("nv-profile")?.addEventListener("click",()=>{S.view="profile";S.profileMsg="";render();});
+  g("nv-out")?.addEventListener("click",signOut);
   const pi=g("pi");
   if(pi){pi.addEventListener("input",e=>S.pw=e.target.value);pi.addEventListener("keydown",e=>{if(e.key==="Enter")doLogin();});setTimeout(()=>pi.focus(),60);}
-  g("lbtn")?.addEventListener("click",doLogin);
+  g("auth-signin-tab")?.addEventListener("click",()=>{S.authMode="signin";S.authErr="";render();});
+  g("auth-signup-tab")?.addEventListener("click",()=>{S.authMode="signup";S.authErr="";render();});
+  g("auth-email")?.addEventListener("input",e=>S.authEmail=e.target.value);
+  g("auth-password")?.addEventListener("input",e=>S.authPassword=e.target.value);
+  g("auth-name")?.addEventListener("input",e=>S.authName=e.target.value);
+  g("auth-submit")?.addEventListener("click",()=>S.authMode==="signup"?signUp():signIn());
+  g("save-profile-btn")?.addEventListener("click",saveProfile);
+  g("profile-chat-btn")?.addEventListener("click",()=>{S.view="chat";render();});
   const ci=g("ci");
   if(ci){
     ci.addEventListener("input",e=>{S.inp=e.target.value;const sb=g("sbtn");if(sb)sb.disabled=S.chatLoading||(!S.inp.trim()&&!S.pendingImages.length);ci.style.height="auto";ci.style.height=Math.min(ci.scrollHeight,120)+"px";});
@@ -812,11 +897,8 @@ function ev(){
     });
   }
 }
-function doLogin(){
-  if(S.pw===CFG.ADMIN_PW){S.auth=true;S.pwErr="";S.view="files";loadAll();}
-  else{S.pwErr="كلمة المرور غير صحيحة";render();}
-}
-window.addEventListener("load",()=>{initPDF();render();});
+function doLogin(){ S.view="login"; render(); }
+window.addEventListener("load",()=>{initPDF();render();initAuth();});
 </script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>

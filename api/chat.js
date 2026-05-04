@@ -1,7 +1,7 @@
 module.exports = async function handler(req, res) {
   res.setHeader("Access-Control-Allow-Origin", "*");
   res.setHeader("Access-Control-Allow-Methods", "POST, OPTIONS");
-  res.setHeader("Access-Control-Allow-Headers", "Content-Type");
+  res.setHeader("Access-Control-Allow-Headers", "Content-Type, Authorization");
   if (req.method === "OPTIONS") return res.status(200).end();
   if (req.method !== "POST") return res.status(405).json({ error: "Method not allowed" });
 
@@ -28,8 +28,26 @@ module.exports = async function handler(req, res) {
   }
 
   const safeQuestion = String(question || "صف هذه الصورة واشرحها في سياق NARS/SAR").trim();
-  const userEmail = req.headers["x-user-email"] || null;
-  const userId = req.headers["x-user-id"] || null;
+
+  async function getVerifiedUser() {
+    const authHeader = req.headers.authorization || req.headers.Authorization || "";
+    const token = String(authHeader).startsWith("Bearer ") ? String(authHeader).slice(7) : "";
+    if (!token) return { id: null, email: null, role: "guest" };
+    try {
+      const r = await fetch(`${SB_URL}/auth/v1/user`, {
+        headers: { "apikey": SB_KEY, "Authorization": `Bearer ${token}` }
+      });
+      const u = await r.json();
+      if (!r.ok || !u?.id) return { id: null, email: null, role: "guest" };
+      return { id: u.id, email: u.email || null, role: "student" };
+    } catch (_) {
+      return { id: null, email: null, role: "guest" };
+    }
+  }
+
+  const verifiedUser = await getVerifiedUser();
+  const userEmail = verifiedUser.email || req.headers["x-user-email"] || null;
+  const userId = verifiedUser.id || req.headers["x-user-id"] || null;
   const IMAGE_DAILY_LIMIT = 15;
   const quotaMessage = "تم استنفاد الحد اليومي لرفع الصور. سيتاح الرفع مجددًا بعد الساعة 12 ليلًا بتوقيت السعودية.";
 
