@@ -24,15 +24,15 @@
 .logo-img{width:42px;height:42px;object-fit:contain;flex-shrink:0}
 
 html,body{height:100%;font-size:16px;background:var(--bg);font-family:"Noto Sans Arabic",sans-serif;color:var(--text);overflow:hidden}
-#root{height:100%;display:flex;flex-direction:column;max-width:1100px;margin:0 auto}
-.header{background:linear-gradient(135deg,#040d1a,#071428 60%,#0a1c38);border-bottom:1px solid var(--gold);padding:10px 18px;display:flex;align-items:center;justify-content:space-between;flex-shrink:0;position:relative;overflow:hidden;z-index:10}
+#root{height:100%;display:flex;flex-direction:column;max-width:1280px;margin:0 auto}
+.header{background:linear-gradient(135deg,#040d1a,#071428 60%,#0a1c38);border-bottom:1px solid var(--gold);padding:10px 18px;display:flex;flex-direction:column;align-items:stretch;justify-content:center;gap:10px;flex-shrink:0;position:relative;overflow:visible;z-index:10}
 .header::after{content:'';position:absolute;inset:0;background:var(--scan);pointer-events:none;opacity:.5}
-.hlogo{display:flex;align-items:center;gap:12px}
+.hlogo{display:flex;align-items:center;justify-content:center;text-align:center;gap:12px;width:100%}
 .anchor{width:40px;height:40px;background:radial-gradient(#c8a05040,#c8a05010);border:1px solid var(--gold);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:19px;box-shadow:0 0 16px #c8a05030;flex-shrink:0}
-.htitle{font-size:14px;font-weight:700;color:var(--gold2);line-height:1.3}
-.hsub{font-size:10px;color:var(--muted);font-family:'JetBrains Mono',monospace;letter-spacing:.5px}
-.nav{display:flex;gap:6px;align-items:center}
-.nb{padding:6px 12px;border-radius:20px;border:1px solid var(--border);background:transparent;color:var(--muted);cursor:pointer;font-size:13px;font-family:"Noto Sans Arabic",sans-serif;transition:all .2s;white-space:nowrap}
+.htitle{font-size:15px;font-weight:800;color:var(--gold2);line-height:1.35}
+.hsub{font-size:11px;color:var(--muted);font-family:'JetBrains Mono',monospace;letter-spacing:.5px;direction:ltr}
+.nav{display:flex;gap:6px;row-gap:7px;align-items:center;justify-content:center;flex-wrap:wrap;width:100%}
+.nb{padding:6px 12px;border-radius:20px;border:1px solid var(--border);background:transparent;color:var(--muted);cursor:pointer;font-size:13px;font-family:"Noto Sans Arabic",sans-serif;transition:all .2s;white-space:nowrap;display:inline-flex;align-items:center;justify-content:center}
 .nb:hover,.nb.act{border-color:var(--gold);color:var(--gold);background:#c8a05015}
 .sdot{width:8px;height:8px;border-radius:50%;background:var(--success);box-shadow:0 0 8px #3a9060;animation:pulse 2s infinite;flex-shrink:0}
 @keyframes pulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.6;transform:scale(1.3)}}
@@ -205,6 +205,7 @@ let S={
   messages:[],messagesLoading:false,messageSubject:"",messageText:"",
   notes:[],notesLoading:false,noteTitle:"",noteText:"",
   shares:[],sharesLoading:false,shareTitle:"",shareContent:"",
+  suggestedQs:[],
   stats:null,statsLoading:false,
   files:[],filesLoading:false,folders:[],
   activeFolder:"الكل",selected:new Set(),
@@ -216,6 +217,25 @@ let S={
   pw:"",pwErr:"",modal:null,notif:"",notifTimer:null,
 };
 function saveKB(){localStorage.setItem("kb_v3",JSON.stringify(S.knowledge));}
+
+const AR_QUESTIONS=[
+  "ما الفرق بين Rescue Basket وRescue Strop؟",
+  "ما أهم خطوة قبل دخول السباح إلى الماء؟",
+  "متى يتم استخدام Sea Dye Marker؟",
+  "ما إجراءات السلامة قبل الاقتراب من الناجي؟",
+  "ما الحالات التي تتطلب تحويل السؤال إلى المعلم؟",
+  "ما حدود استخدام Rescue Basket مع ناجٍ واعٍ؟"
+];
+const EN_QUESTIONS=[
+  "What are the standard water entry techniques?",
+  "When should a rescue basket be selected?",
+  "What are the emergency procedures during hoisting?",
+  "How do you compare rescue devices by survivor condition?",
+  "What radio communication checks are required before launch?",
+  "What are the key safety considerations before swimmer deployment?"
+];
+function pick(arr){return arr[Math.floor(Math.random()*arr.length)];}
+function makeSuggestedQuestions(){return [pick(AR_QUESTIONS),pick(EN_QUESTIONS)];}
 
 function userRole(){return S.profile?.role||"guest";}
 function canManage(){return ["admin","instructor"].includes(userRole());}
@@ -230,9 +250,13 @@ async function initAuth(){
   }catch(e){console.warn(e);render();}
 }
 async function applySession(session,rerender=true){
+  const previousUserId=S.user?.id||null;
   S.session=session||null;
   S.user=session?.user||null;
-  if(S.user){await loadProfile(false);}else{S.profile=null;S.auth=false;}
+  if(S.user){
+    if(previousUserId!==S.user.id)S.suggestedQs=makeSuggestedQuestions();
+    await loadProfile(false);
+  }else{S.profile=null;S.auth=false;S.suggestedQs=makeSuggestedQuestions();}
   if(rerender)render();
 }
 async function loadProfile(rerender=true){
@@ -285,7 +309,7 @@ function buildConversationSummary(maxChars=4000, recentLimit=12){
   const clean=S.msgs.filter(m=>!m.pending && (m.t||"").trim());
   const older=clean.slice(0, Math.max(0, clean.length-recentLimit));
   if(!older.length)return S.chatSummary||"";
-  const transcript=older.map(m=>`${m.r==="user"?"الطالب":"المساعد"}: ${m.t}`).join("\n");
+  const transcript=older.map(m=>`${m.r==="user"?"المستخدم":"المساعد"}: ${m.t}`).join("\n");
   const trimmed=transcript.length>maxChars ? transcript.slice(-maxChars) : transcript;
   S.chatSummary=trimmed;
   localStorage.setItem("kb_chat_summary",trimmed);
@@ -505,7 +529,6 @@ function filteredFiles(){return S.activeFolder==="الكل"?S.files:S.files.filt
 function folderCount(name){return S.files.filter(f=>f.category===name).length;}
 
 async function sendMsg(){
-  if(!S.user){S.view="login";S.authErr="يرجى تسجيل الدخول لاستخدام المحادثة وحفظ سجل الأسئلة.";render();return;}
   const q=S.inp.trim();
   if((!q&&!S.pendingImages.length)||S.chatLoading)return;
   const imgs=[...S.pendingImages];
@@ -593,11 +616,10 @@ function html(){return`
         ?`<button class="nb ${S.view==="files"?"act":""}" id="nv-files">📁 الملفات</button>
           <button class="nb ${S.view==="pending"?"act":""}" id="nv-pending">❓ الأسئلة${S.pendingQs&&S.pendingQs.filter(q=>!q.answered).length>0?' <span style="background:var(--danger);color:#fff;border-radius:10px;padding:1px 6px;font-size:12px">'+S.pendingQs.filter(q=>!q.answered).length+'</span>':""}</button>
           <button class="nb ${S.view==="users"?"act":""}" id="nv-users">👥 المستخدمون</button>
-          <button class="nb ${S.view==="stats"?"act":""}" id="nv-stats">📊 الإحصائيات</button>
-          <button class="nb ${S.view==="admin"?"act":""}" id="nv-admin">⚙️ إدارة</button>`
+          <button class="nb ${S.view==="stats"?"act":""}" id="nv-stats">📊 الإحصائيات</button>`
         :""}
       ${S.user
-        ?`<button class="nb ${S.view==="messages"?"act":""}" id="nv-messages">✉️ الرسائل</button><button class="nb ${S.view==="notes"?"act":""}" id="nv-notes">📝 ملاحظاتي</button><button class="nb ${S.view==="shares"?"act":""}" id="nv-shares">📨 مشاركة</button><button class="nb ${S.view==="profile"?"act":""}" id="nv-profile">👤 ${esc(S.profile?.display_name||S.user.email||"حسابي")}</button><button class="nb" id="nv-out">خروج</button>`
+        ?`<button class="nb ${S.view==="messages"?"act":""}" id="nv-messages">✉️ الرسائل</button><button class="nb ${S.view==="notes"?"act":""}" id="nv-notes">📝 ملاحظاتي</button><button class="nb ${S.view==="shares"?"act":""}" id="nv-shares">📨 اقتراح معلومة</button><button class="nb ${S.view==="profile"?"act":""}" id="nv-profile">👤 ${esc(S.profile?.display_name||S.user.email||"حسابي")}</button><button class="nb logout-btn" id="nv-out">تسجيل الخروج</button>`
         :`<button class="nb ${S.view==="login"?"act":""}" id="nv-login">🔐 دخول</button>`}
           <button onclick="toggleTheme()" style="width:32px;height:32px;border-radius:50%;border:1px solid var(--border);background:transparent;cursor:pointer;font-size:17px;display:flex;align-items:center;justify-content:center;" title="تبديل الثيم" id="theme-btn">${isDark()?"☀️":"🌙"}</button>
     </div>
@@ -606,7 +628,6 @@ function html(){return`
     ${S.view==="chat"?buildChat():""}
     ${S.view==="files"?buildFiles():""}
     ${S.view==="login"?buildLogin():""}
-    ${S.view==="admin"?buildAdmin():""}
     ${S.view==="pending"?buildPending():""}
     ${S.view==="stats"?buildStats():""}
     ${S.view==="users"?buildUsers():""}
@@ -663,22 +684,21 @@ function buildChat(){
   const welcome=S.msgs.length===0?`<div class="welcome">
     <div class="wicon">⚓</div>
     <div class="wtitle">مركز المعرفة/ البحث والإنقاذ</div>
-    <div class="wsub">اسألني أي سؤال عن الإنقاذ البحري الجوي — بالعربية أو الإنجليزية.<br>
-      <span style="font-size:13px;color:#3a7a5a">النظام يبحث في ملفاتك بدقة ويحلل ويستنتج</span></div>
+    <div class="wsub">اسألني أي شيء عن البحث والإنقاذ البحري الجوي -بالعربية أو الإنجليزية- وسأجيبك من واقع مصادري المحددة لي مسبقاً ولا أخرج عنها.<br>
+      ${!S.user?`<span style="font-size:13px;color:#3a7a5a">يمكنك السؤال دون تسجيل. تسجيل الدخول اختياري ويضيف ميزات العضوية مثل السجل، الرسائل، الملاحظات، وسؤالين مقترحين جديدين عند كل دخول.</span>`:`<span style="font-size:13px;color:#3a7a5a">سؤالان جديدان لهذا الدخول:</span>`}</div>
     <div class="wqs">
-      ${["ما نوع الراديو المستخدم؟","What are the entry techniques?","ما هي إجراءات الطوارئ؟","Compare rescue methods"].map(q=>`<button class="nb qq" data-q="${q}">${q}</button>`).join("")}
+      ${(S.suggestedQs.length?S.suggestedQs:makeSuggestedQuestions()).map(q=>`<button class="nb qq" data-q="${q}">${q}</button>`).join("")}
     </div></div>`:"";
   return`<div class="chat-wrap">
     <div class="sbar"><div class="si">📁 الملفات: <b>${S.files.length}</b></div><div class="si">🧠 البحث: <b>كل المراجع / الأحدث أولاً</b></div><div class="si">🖼️ الصور: <b>15 صورة يوميًا للموقع</b></div></div>
     <div class="msgs">${welcome}${msgs}${typing}<div id="me"></div></div>
     ${S.pendingImages.length?`<div class="pending-imgs">${S.pendingImages.map((img,i)=>`<div class="pending-img"><img src="${img.preview}" alt="صورة مرفقة"><button class="rm-img" data-i="${i}" title="إزالة">×</button></div>`).join("")}</div>`:""}
-    ${!S.user?`<div class="login-required">سجّل الدخول لاستخدام المحادثة وحفظ سجلك وملفك الشخصي. <button class="btn bg bsm" id="chat-login-btn">دخول</button></div>`:""}
     <div class="iarea">
       <label class="img-btn" title="إرفاق صورة" style="width:46px;height:46px;flex-shrink:0;background:var(--card);border:1px solid var(--border);border-radius:12px;cursor:pointer;font-size:19px;display:flex;align-items:center;justify-content:center;color:var(--muted);position:relative;overflow:hidden">
           📎<input type="file" id="img-inp" accept="image/*" multiple style="position:absolute;inset:0;opacity:0;cursor:pointer;width:100%;height:100%">
         </label>
-        <textarea class="ci" id="ci" placeholder="اكتب سؤالك هنا... / Ask your question..." rows="1" dir="auto" ${S.chatLoading||!S.user?"disabled":""}>${esc(S.inp)}</textarea>
-      <button class="sbtn" id="sbtn" ${S.chatLoading||!S.user||(!S.inp.trim()&&!S.pendingImages.length)?"disabled":""}>✈</button>
+        <textarea class="ci" id="ci" placeholder="اكتب سؤالك هنا... / Ask your question..." rows="1" dir="auto" ${S.chatLoading?"disabled":""}>${esc(S.inp)}</textarea>
+      <button class="sbtn" id="sbtn" ${S.chatLoading||(!S.inp.trim()&&!S.pendingImages.length)?"disabled":""}>✈</button>
     </div></div>`;}
 
 function buildFiles(){
@@ -849,14 +869,15 @@ function buildUsers(){
     </div>
     <div class="data-meta">تاريخ التسجيل: ${fmtDate(u.created_at)}</div>
   </div>`).join('');
-  return `<div class="section-wrap"><div class="toolbar"><div><div class="atitle">👥 إدارة المستخدمين</div><div class="data-meta">تغيير صلاحيات الطلاب والمعلمين من داخل الموقع</div></div><button class="btn bg" id="refresh-users">تحديث</button></div>${S.usersLoading?`<div class="empty-box">جاري التحميل...</div>`:rows?`<div class="stage-grid">${rows}</div>`:`<div class="empty-box">لا يوجد مستخدمون</div>`}</div>`;
+  return `<div class="section-wrap"><div class="toolbar"><div><div class="atitle">👥 إدارة المستخدمين</div><div class="data-meta">تغيير صلاحيات المستخدمين والمعلمين من داخل الموقع</div></div><button class="btn bg" id="refresh-users">تحديث</button></div>${S.usersLoading?`<div class="empty-box">جاري التحميل...</div>`:rows?`<div class="stage-grid">${rows}</div>`:`<div class="empty-box">لا يوجد مستخدمون</div>`}</div>`;
 }
 
 function buildMessages(){
+  if(!S.user)return buildLogin();
   const isMgr=canManage();
-  const form=!isMgr?`<div class="data-card" style="margin-bottom:12px"><div class="data-title">✉️ رسالة إلى مدير النظام</div><input class="mini-input" id="msg-subject" placeholder="الموضوع" value="${esc(S.messageSubject)}" style="margin-bottom:8px"><textarea class="mini-text" id="msg-text" placeholder="اكتب رسالتك أو طلب التوضيح">${esc(S.messageText)}</textarea><div class="data-actions"><button class="btn bg" id="send-message-btn">إرسال</button></div></div>`:`<div class="auth-note" style="margin-bottom:12px">تعرض هذه الصفحة رسائل المستخدمين المفتوحة والسابقة.</div>`;
+  const form=`<div class="data-card" style="margin-bottom:12px"><div class="data-title">✉️ رسالة إلى مدير النظام</div><input class="mini-input" id="msg-subject" placeholder="الموضوع" value="${esc(S.messageSubject)}" style="margin-bottom:8px"><textarea class="mini-text" id="msg-text" placeholder="اكتب رسالتك أو طلب التوضيح للإداري">${esc(S.messageText)}</textarea><div class="data-actions"><button class="btn bg" id="send-message-btn">إرسال للإداري</button></div></div>${isMgr?`<div class="auth-note" style="margin-bottom:12px">بصفتك معلمًا/مسؤولًا، يمكنك إرسال رسالة للإداري، كما تظهر لك رسائل المستخدمين للمتابعة والرد.</div>`:''}`;
   const cards=(S.messages||[]).map(m=>`<div class="data-card"><div style="display:flex;justify-content:space-between;gap:8px"><div class="data-title">${esc(m.subject||'بدون موضوع')}</div><span class="pill ${m.status==='closed'?'ok':m.status==='new'?'warn':''}">${esc(m.status||'new')}</span></div><div style="white-space:pre-wrap;line-height:1.8">${esc(m.message)}</div><div class="data-meta">من: ${esc(m.sender_email||'-')} · ${fmtDate(m.created_at)}</div>${m.reply?`<div class="auth-note" style="margin-top:10px"><b>الرد:</b><br>${esc(m.reply)}</div>`:''}${isMgr&&m.status!=='closed'?`<textarea class="mini-text" id="reply-${m.id}" placeholder="اكتب الرد...">${esc(m.reply||'')}</textarea><div class="data-actions"><button class="btn bg bsm reply-msg" data-id="${m.id}">إرسال الرد</button><button class="btn bo bsm close-msg" data-id="${m.id}">إغلاق</button></div>`:''}</div>`).join('');
-  return `<div class="section-wrap"><div class="toolbar"><div><div class="atitle">✉️ صندوق الرسائل</div><div class="data-meta">تواصل داخلي بين الطلاب والمسئول</div></div><button class="btn bo" id="refresh-messages">تحديث</button></div>${form}${S.messagesLoading?`<div class="empty-box">جاري التحميل...</div>`:cards?`<div class="stage-grid">${cards}</div>`:`<div class="empty-box">لا توجد رسائل</div>`}</div>`;
+  return `<div class="section-wrap"><div class="toolbar"><div><div class="atitle">✉️ صندوق الرسائل</div><div class="data-meta">تواصل داخلي بين المستخدمين والمسئول</div></div><button class="btn bo" id="refresh-messages">تحديث</button></div>${form}${S.messagesLoading?`<div class="empty-box">جاري التحميل...</div>`:cards?`<div class="stage-grid">${cards}</div>`:`<div class="empty-box">لا توجد رسائل</div>`}</div>`;
 }
 
 function buildNotes(){
@@ -866,10 +887,10 @@ function buildNotes(){
 }
 
 function buildShares(){
-  const form=`<div class="data-card" style="margin-bottom:12px"><div class="data-title">📨 مشاركة معلومة للمراجعة</div><input class="mini-input" id="share-title" placeholder="عنوان المعلومة" value="${esc(S.shareTitle)}" style="margin-bottom:8px"><textarea class="mini-text" id="share-content" placeholder="اكتب المعلومة أو التصحيح المقترح ليتم اعتمادها من المسئول">${esc(S.shareContent)}</textarea><div class="data-actions"><button class="btn bg" id="submit-share-btn">إرسال للمراجعة</button></div></div>`;
+  const form=`<div class="data-card" style="margin-bottom:12px"><div class="data-title">📨 اقتراح معلومة للمراجعة والاعتماد</div><input class="mini-input" id="share-title" placeholder="عنوان المعلومة" value="${esc(S.shareTitle)}" style="margin-bottom:8px"><textarea class="mini-text" id="share-content" placeholder="اكتب المعلومة أو التصحيح المقترح ليتم اعتمادها من المسئول">${esc(S.shareContent)}</textarea><div class="data-actions"><button class="btn bg" id="submit-share-btn">إرسال للمراجعة</button></div></div>`;
   const isMgr=canManage();
   const cards=(S.shares||[]).map(x=>`<div class="data-card"><div style="display:flex;justify-content:space-between;gap:8px"><div class="data-title">${esc(x.title||'معلومة مقترحة')}</div><span class="pill ${x.status==='approved'?'ok':x.status==='rejected'?'warn':''}">${esc(x.status||'pending')}</span></div><div style="white-space:pre-wrap;line-height:1.8">${esc(x.content)}</div><div class="data-meta">من: ${esc(x.user_email||'-')} · ${fmtDate(x.created_at)}</div>${x.admin_comment?`<div class="auth-note" style="margin-top:10px"><b>ملاحظة المسئول:</b><br>${esc(x.admin_comment)}</div>`:''}${isMgr&&x.status==='pending'?`<textarea class="mini-text" id="share-comment-${x.id}" placeholder="تعليق اختياري للمستخدم"></textarea><div class="data-actions"><button class="btn bg bsm approve-share" data-id="${x.id}">اعتماد</button><button class="btn bd bsm reject-share" data-id="${x.id}">رفض</button></div>`:''}</div>`).join('');
-  return `<div class="section-wrap"><div class="toolbar"><div><div class="atitle">📨 مشاركة المعلومات</div><div class="data-meta">اقتراح معلومات وتصحيحات ثم مراجعتها قبل اعتمادها</div></div><button class="btn bo" id="refresh-shares">تحديث</button></div>${!isMgr?form:`<div class="auth-note" style="margin-bottom:12px">يمكنك مراجعة المعلومات المقترحة واعتمادها أو رفضها.</div>`}${S.sharesLoading?`<div class="empty-box">جاري التحميل...</div>`:cards?`<div class="stage-grid">${cards}</div>`:`<div class="empty-box">لا توجد مشاركات</div>`}</div>`;
+  return `<div class="section-wrap"><div class="toolbar"><div><div class="atitle">📨 اقتراح معلومة</div><div class="data-meta">هذه الصفحة لإرسال معلومة أو تصحيح إلى المسؤول، ولا تصبح جزءًا من المعرفة إلا بعد المراجعة والاعتماد</div></div><button class="btn bo" id="refresh-shares">تحديث</button></div>${!isMgr?form:`<div class="auth-note" style="margin-bottom:12px">يمكنك مراجعة المعلومات المقترحة واعتمادها أو رفضها.</div>`}${S.sharesLoading?`<div class="empty-box">جاري التحميل...</div>`:cards?`<div class="stage-grid">${cards}</div>`:`<div class="empty-box">لا توجد مشاركات</div>`}</div>`;
 }
 
 function buildAdmin(){
@@ -900,7 +921,6 @@ function ev(){
   const g=id=>document.getElementById(id);
   g("nv-chat")?.addEventListener("click",()=>{S.view="chat";render();});
   g("nv-files")?.addEventListener("click",()=>{S.view="files";loadAll();});
-  g("nv-admin")?.addEventListener("click",()=>{S.view="admin";render();});
   g("nv-stats")?.addEventListener("click",()=>{S.view="stats";loadStats();});
   g("nv-pending")?.addEventListener("click",()=>{S.view="pending";loadPendingQs().then(render);});
   g("nv-users")?.addEventListener("click",loadUsers);
