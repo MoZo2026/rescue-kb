@@ -162,6 +162,7 @@ textarea.fi{resize:vertical;min-height:90px}
 .pimgs{display:flex;gap:8px;flex-wrap:wrap;margin-top:8px;direction:rtl}.pimgs img{max-width:180px;max-height:160px;border-radius:10px;border:1px solid var(--border);object-fit:cover}.pending-imgs{display:flex;gap:8px;flex-wrap:wrap;padding:0 16px 8px;background:var(--surface);border-top:1px solid var(--border2);direction:rtl}.pending-img{position:relative}.pending-img img{width:72px;height:72px;object-fit:cover;border-radius:10px;border:1px solid var(--border)}.pending-img button{position:absolute;top:-7px;left:-7px;width:22px;height:22px;border-radius:50%;border:1px solid var(--border);background:var(--card);color:var(--danger);cursor:pointer;font-size:12px}.img-btn:hover{border-color:var(--gold);color:var(--gold)}
 @media(max-width:640px){.fsidebar{width:150px}.htitle{font-size:12px}.nb{padding:5px 8px;font-size:12px}.fgrid{grid-template-columns:repeat(auto-fill,minmax(130px,1fr))}.bub{max-width:88%}}
 @media(max-width:480px){.fsidebar{display:none}}
+.share-row{display:flex;gap:6px;margin-top:10px;flex-wrap:wrap}.share-row button{border:1px solid var(--border);background:var(--surface);color:var(--muted);border-radius:10px;padding:4px 9px;font-size:11px;cursor:pointer;font-family:"Noto Sans Arabic",sans-serif}.share-row button:hover{border-color:var(--gold);color:var(--gold)}
 </style>
 </head>
 <body>
@@ -196,6 +197,7 @@ let S={
   view:"chat",auth:false,
   msgs:[],inp:"",chatLoading:false,
   pendingQs:[],pendingImages:[],
+  stats:null,statsLoading:false,
   files:[],filesLoading:false,folders:[],
   activeFolder:"الكل",selected:new Set(),
   uploading:false,uploadPct:0,uploadLabel:"",drag:false,
@@ -528,6 +530,7 @@ function html(){return`
       ${S.auth
         ?`<button class="nb ${S.view==="files"?"act":""}" id="nv-files">📁 الملفات</button>
           <button class="nb ${S.view==="pending"?"act":""}" id="nv-pending">❓ الأسئلة${S.pendingQs&&S.pendingQs.filter(q=>!q.answered).length>0?' <span style="background:var(--danger);color:#fff;border-radius:10px;padding:1px 6px;font-size:12px">'+S.pendingQs.filter(q=>!q.answered).length+'</span>':""}</button>
+          <button class="nb ${S.view==="stats"?"act":""}" id="nv-stats">📊 الإحصائيات</button>
           <button class="nb ${S.view==="admin"?"act":""}" id="nv-admin">⚙️ إدارة</button>
           <button class="nb" id="nv-out">خروج</button>`
         :`<button class="nb ${S.view==="login"?"act":""}" id="nv-login">🔐 المسئول</button>`}
@@ -540,10 +543,52 @@ function html(){return`
     ${S.view==="login"?buildLogin():""}
     ${S.view==="admin"?buildAdmin():""}
     ${S.view==="pending"?buildPending():""}
+    ${S.view==="stats"?buildStats():""}
   </div>`;}
 
+function shareMsg(platform,idx){
+  const msg=S.msgs[idx];
+  if(!msg||!msg.t)return;
+  const text=`${msg.t}\n\nSAR Knowledge AI`;
+  if(platform==="copy"){
+    navigator.clipboard?.writeText(text).then(()=>notif("تم نسخ الإجابة"));
+    return;
+  }
+  const url=platform==="whatsapp"
+    ? `https://wa.me/?text=${encodeURIComponent(text)}`
+    : `https://t.me/share/url?url=${encodeURIComponent(location.href)}&text=${encodeURIComponent(text)}`;
+  window.open(url,"_blank","noopener,noreferrer");
+}
+
+async function loadStats(){
+  S.statsLoading=true;render();
+  try{
+    const r=await fetch("/api/stats");
+    const d=await r.json();
+    if(!r.ok)throw new Error(d.error||"تعذر تحميل الإحصائيات");
+    S.stats=d;
+  }catch(e){notif("خطأ الإحصائيات: "+e.message);}
+  S.statsLoading=false;render();
+}
+
+async function checkImageQuotaBeforeSelect(count){
+  try{
+    const r=await fetch("/api/image-quota");
+    const d=await r.json();
+    if(!r.ok)throw new Error(d.error||"تعذر فحص حد الصور");
+    if(count>d.remaining){
+      notif("تم استنفاد الحد اليومي لرفع الصور. سيتاح الرفع مجددًا بعد الساعة 12 ليلًا.");
+      return false;
+    }
+    return true;
+  }catch(e){
+    notif("تعذر فحص حد الصور: "+e.message);
+    return false;
+  }
+}
+
 function buildChat(){
-  const msgs=S.msgs.map(m=>`<div class="mr ${m.r}"><div class="av ${m.r==="user"?"user":"bot"}">${m.r==="user"?"👤":"⚓"}</div><div class="bub ${m.r==="user"?"user":"bot"}">${esc(m.t)}${m.imgs?.length?`<div class="pimgs">${m.imgs.map(src=>`<img src="${src}" alt="صورة مرفقة">`).join("")}</div>`:""}</div></div>`).join("");
+  const msgs=S.msgs.map((m,i)=>`<div class="mr ${m.r}"><div class="av ${m.r==="user"?"user":"bot"}">${m.r==="user"?"👤":"⚓"}</div><div class="bub ${m.r==="user"?"user":"bot"}">${esc(m.t)}${m.imgs?.length?`<div class="pimgs">${m.imgs.map(src=>`<img src="${src}" alt="صورة مرفقة">`).join("")}</div>`:""}${m.r==="bot"&&!m.pending?`<div class="share-row"><button onclick="shareMsg('whatsapp',${i})">واتساب</button><button onclick="shareMsg('telegram',${i})">تيليغرام</button><button onclick="shareMsg('copy',${i})">نسخ</button></div>`:""}</div></div>`).join("");
   const typing=S.chatLoading?`<div class="mr bot"><div class="av bot">⚓</div><div class="bub bot typing"><div class="dot"></div><div class="dot"></div><div class="dot"></div></div></div>`:"";
   const welcome=S.msgs.length===0?`<div class="welcome">
     <div class="wicon">⚓</div>
@@ -554,7 +599,7 @@ function buildChat(){
       ${["ما نوع الراديو المستخدم؟","What are the entry techniques?","ما هي إجراءات الطوارئ؟","Compare rescue methods"].map(q=>`<button class="nb qq" data-q="${q}">${q}</button>`).join("")}
     </div></div>`:"";
   return`<div class="chat-wrap">
-    <div class="sbar"><div class="si">📁 الملفات: <b>${S.files.length}</b></div><div class="si">🧠 البحث: <b>كل المراجع / الأحدث أولاً</b></div><div class="si">🖼️ الصور: <b>مدعومة عبر API</b></div></div>
+    <div class="sbar"><div class="si">📁 الملفات: <b>${S.files.length}</b></div><div class="si">🧠 البحث: <b>كل المراجع / الأحدث أولاً</b></div><div class="si">🖼️ الصور: <b>15 صورة يوميًا للموقع</b></div></div>
     <div class="msgs">${welcome}${msgs}${typing}<div id="me"></div></div>
     ${S.pendingImages.length?`<div class="pending-imgs">${S.pendingImages.map((img,i)=>`<div class="pending-img"><img src="${img.preview}" alt="صورة مرفقة"><button class="rm-img" data-i="${i}" title="إزالة">×</button></div>`).join("")}</div>`:""}
     <div class="iarea">
@@ -655,6 +700,23 @@ function buildPending(){
         </div>`).join("")}`:""}
   </div>`;}
 
+function buildStats(){
+  if(S.statsLoading)return`<div class="admin-wrap"><div class="atitle">📊 الإحصائيات</div><div style="padding:30px;color:var(--muted)">جاري التحميل...</div></div>`;
+  const b=S.stats?.base||{};
+  const card=(title,val)=>`<div style="background:var(--card);border:1px solid var(--border2);border-radius:12px;padding:14px;box-shadow:var(--shadow)"><div style="font-size:12px;color:var(--muted);margin-bottom:6px">${title}</div><div style="font-size:24px;font-weight:800;color:var(--gold2);font-family:monospace">${val??0}</div></div>`;
+  const list=(title,arr,key="word")=>`<div style="background:var(--card);border:1px solid var(--border2);border-radius:12px;padding:14px;box-shadow:var(--shadow)"><div style="font-size:14px;font-weight:700;color:var(--gold2);margin-bottom:10px">${title}</div>${(arr||[]).length?(arr||[]).map(x=>`<div style="display:flex;justify-content:space-between;border-bottom:1px solid var(--border2);padding:6px 0;font-size:13px"><span>${esc(x[key]||x.name||"-")}</span><b style="font-family:monospace;color:var(--gold)">${x.count}</b></div>`).join(""):`<div style="font-size:13px;color:var(--muted)">لا توجد بيانات كافية بعد</div>`}</div>`;
+  return`<div class="admin-wrap"><div class="atop"><div><div class="atitle">📊 إحصائيات المنصة</div><div style="font-size:12px;color:var(--muted)">قراءة الاستخدام والفجوات المعرفية</div></div><button class="btn bg" id="refresh-stats">تحديث</button></div>
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;margin-bottom:12px">
+      ${card("المسجلون",b.registered_users)}${card("إجمالي الأسئلة",b.total_questions)}${card("الأسئلة المعلقة",b.pending_questions)}${card("الإجابات المعتمدة",b.approved_answers)}${card("FAQ",b.faq_items)}${card("صور اليوم",`${b.images_uploaded_today_riyadh||0}/15`)}${card("رسائل مفتوحة",b.messages_open)}
+    </div>
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:12px">
+      ${list("أكثر كلمات البحث",S.stats?.topWords,"word")}
+      ${list("أكثر المواضيع تصفحًا",S.stats?.topTopics,"name")}
+      ${list("أكثر الملفات استخدامًا",S.stats?.topFiles,"name")}
+      ${list("أنواع الإجابات",S.stats?.answerTypes,"name")}
+    </div>
+  </div>`;}
+
 function buildLogin(){return`<div class="lw"><div class="lc">
   <div class="li2">🔐</div><div class="lt">لوحة التحكم</div>
   <div class="ls">ADMIN CONTROL PANEL</div>
@@ -693,7 +755,9 @@ function ev(){
   g("nv-chat")?.addEventListener("click",()=>{S.view="chat";render();});
   g("nv-files")?.addEventListener("click",()=>{S.view="files";loadAll();});
   g("nv-admin")?.addEventListener("click",()=>{S.view="admin";render();});
+  g("nv-stats")?.addEventListener("click",()=>{S.view="stats";loadStats();});
   g("nv-pending")?.addEventListener("click",()=>{S.view="pending";loadPendingQs().then(render);});
+  g("refresh-stats")?.addEventListener("click",loadStats);
   g("nv-login")?.addEventListener("click",()=>{S.view="login";S.pw="";S.pwErr="";render();});
   g("nv-out")?.addEventListener("click",()=>{S.auth=false;S.view="chat";render();});
   const pi=g("pi");
@@ -735,8 +799,12 @@ function ev(){
   // Image input handler
   const imgEl=document.getElementById("img-inp");
   if(imgEl){
-    imgEl.addEventListener("change",function(e){
-      Array.from(e.target.files||[]).forEach(function(file){
+    imgEl.addEventListener("change",async function(e){
+      const selected=Array.from(e.target.files||[]);
+      if(!selected.length)return;
+      const ok=await checkImageQuotaBeforeSelect(S.pendingImages.length+selected.length);
+      if(!ok){this.value="";return;}
+      selected.forEach(function(file){
         S.pendingImages.push({file:file,preview:URL.createObjectURL(file)});
       });
       this.value="";
