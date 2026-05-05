@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>مركز معرفة الإنقاذ البحري الجوي</title>
+<title>المنقذ الذكي</title>
 <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@300;400;500;700;800;900&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
@@ -31,7 +31,7 @@ html,body{height:100%;font-size:16px;background:var(--bg);font-family:"Tajawal",
 .anchor{width:40px;height:40px;background:radial-gradient(#c8a05040,#c8a05010);border:1px solid var(--gold);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:19px;box-shadow:0 0 16px #c8a05030;flex-shrink:0}
 .htitle{font-size:18px;font-weight:900;color:#eaf6ff;line-height:1.35}
 .hsub{font-size:11px;color:var(--muted);font-family:"Inter",system-ui,sans-serif;letter-spacing:.5px;direction:ltr}
-.nav{display:grid;grid-template-columns:repeat(auto-fit,minmax(138px,1fr));gap:8px;align-items:center;justify-content:center;width:100%;max-width:1120px;margin:0 auto}
+.nav-menu{width:100%;max-width:1120px;margin:0 auto;display:flex;flex-direction:column;gap:8px;align-items:center}.menu-toggle{min-height:44px;min-width:150px;border:1px solid var(--border);background:var(--card);color:var(--text);border-radius:14px;padding:9px 16px;font-family:"Tajawal","Inter",system-ui,sans-serif;font-weight:800;cursor:pointer;box-shadow:var(--shadow)}.nav{display:grid;grid-template-columns:repeat(auto-fit,minmax(138px,1fr));gap:8px;align-items:center;justify-content:center;width:100%;max-width:960px;margin:0 auto;background:var(--card);border:1px solid var(--border2);border-radius:18px;padding:10px;box-shadow:var(--shadow)}
 .nb{padding:6px 12px;border-radius:20px;border:1px solid var(--border);background:transparent;color:var(--muted);cursor:pointer;font-size:13px;font-family:"Tajawal","Inter",system-ui,sans-serif;transition:all .2s;white-space:nowrap;display:inline-flex;align-items:center;justify-content:center}
 .nb:hover,.nb.act{border-color:var(--gold);color:#ffffff;background:rgba(56,189,248,.18)}
 .sdot{display:none}
@@ -164,7 +164,7 @@ textarea.fi{resize:vertical;min-height:90px}
 @media(max-width:480px){.fsidebar{display:none}}
 .share-row{display:flex;gap:6px;margin-top:10px;flex-wrap:wrap}.share-row button{border:1px solid var(--border);background:var(--surface);color:var(--muted);border-radius:10px;padding:4px 9px;font-size:11px;cursor:pointer;font-family:"Tajawal","Inter",system-ui,sans-serif}.share-row button:hover{border-color:var(--gold);color:var(--gold)}
 
-.stage-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:12px}.data-card{background:var(--card);border:1px solid var(--border2);border-radius:14px;padding:14px;box-shadow:var(--shadow);direction:rtl}.data-title{font-size:15px;font-weight:800;color:var(--gold2);margin-bottom:8px}.data-meta{font-size:12px;color:var(--muted);margin-top:6px}.data-actions{display:flex;gap:7px;flex-wrap:wrap;margin-top:10px}.mini-select,.mini-input,.mini-text{width:100%;border:1px solid var(--border);background:var(--input);color:var(--text);border-radius:10px;padding:9px;font-family:"Tajawal","Inter",system-ui,sans-serif}.mini-text{min-height:90px;resize:vertical}.toolbar{display:flex;gap:8px;align-items:center;justify-content:space-between;margin-bottom:14px;flex-wrap:wrap;direction:rtl}.pill{display:inline-block;border:1px solid var(--border);background:var(--surface);border-radius:999px;padding:3px 9px;font-size:12px;color:var(--muted)}.pill.ok{color:var(--success);border-color:#2a6a4040}.pill.warn{color:var(--danger);border-color:#c0585840}.empty-box{text-align:center;padding:34px;color:var(--muted);background:var(--card);border:1px solid var(--border2);border-radius:14px}.section-wrap{flex:1;overflow-y:auto;padding:18px;direction:rtl}.two-col{display:grid;grid-template-columns:1fr 1fr;gap:12px}@media(max-width:760px){.two-col{grid-template-columns:1fr}.header{padding:8px 10px}.hlogo{gap:8px}.logo-img{width:36px!important;height:36px!important}.htitle{font-size:15px}.hsub{font-size:11px}.nav{grid-template-columns:repeat(2,minmax(0,1fr));gap:7px}.nb{font-size:12px;min-height:44px;padding:7px 8px}.msgs{padding:14px}.bub{max-width:88%;font-size:13.5px}.sbar{gap:8px;padding:8px 12px}.si{font-size:11px}}
+.stage-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:12px}.data-card{background:var(--card);border:1px solid var(--border2);border-radius:14px;padding:14px;box-shadow:var(--shadow);direction:rtl}.data-title{font-size:15px;font-weight:800;color:var(--gold2);margin-bottom:8px}.data-meta{font-size:12px;color:var(--muted);margin-top:6px}.data-actions{display:flex;gap:7px;flex-wrap:wrap;margin-top:10px}.mini-select,.mini-input,.mini-text{width:100%;border:1px solid var(--border);background:var(--input);color:var(--text);border-radius:10px;padding:9px;font-family:"Tajawal","Inter",system-ui,sans-serif}.mini-text{min-height:90px;resize:vertical}.toolbar{display:flex;gap:8px;align-items:center;justify-content:space-between;margin-bottom:14px;flex-wrap:wrap;direction:rtl}.pill{display:inline-block;border:1px solid var(--border);background:var(--surface);border-radius:999px;padding:3px 9px;font-size:12px;color:var(--muted)}.pill.ok{color:var(--success);border-color:#2a6a4040}.pill.warn{color:var(--danger);border-color:#c0585840}.empty-box{text-align:center;padding:34px;color:var(--muted);background:var(--card);border:1px solid var(--border2);border-radius:14px}.section-wrap{flex:1;overflow-y:auto;padding:18px;direction:rtl}.two-col{display:grid;grid-template-columns:1fr 1fr;gap:12px}@media(max-width:760px){.two-col{grid-template-columns:1fr}.header{padding:8px 10px}.hlogo{gap:8px}.logo-img{width:36px!important;height:36px!important}.htitle{font-size:15px}.hsub{font-size:11px}.nav{grid-template-columns:1fr;gap:7px;max-width:100%}.menu-toggle{width:100%}.nb{font-size:12px;min-height:44px;padding:7px 8px}.msgs{padding:14px}.bub{max-width:88%;font-size:13.5px}.sbar{gap:8px;padding:8px 12px}.si{font-size:11px}}
 
 .auth-card{max-width:440px;margin:34px auto;background:var(--card);border:1px solid var(--border2);border-radius:18px;box-shadow:var(--shadow);padding:22px;direction:rtl}.auth-title{font-size:19px;font-weight:800;color:var(--gold2);margin-bottom:6px}.auth-sub{font-size:12px;color:var(--muted);margin-bottom:16px}.auth-row{display:flex;gap:8px;margin-bottom:12px}.auth-tab{flex:1;border:1px solid var(--border);background:var(--surface);color:var(--muted);border-radius:12px;padding:9px;cursor:pointer;font-family:"Tajawal","Inter",system-ui,sans-serif}.auth-tab.act{background:var(--gold);color:#fff;border-color:var(--gold)}.auth-field{margin-bottom:10px}.auth-field label{display:block;font-size:12px;color:var(--muted);margin-bottom:5px}.auth-field input{width:100%;box-sizing:border-box;border:1px solid var(--border);background:var(--surface);color:var(--text);border-radius:12px;padding:10px;font-family:"Tajawal","Inter",system-ui,sans-serif}.auth-error{background:#ffe9e9;color:#9b1c1c;border:1px solid #ffc7c7;border-radius:10px;padding:9px;font-size:12px;margin:8px 0}.auth-note{background:var(--surface);border:1px solid var(--border2);border-radius:12px;padding:10px;font-size:12px;color:var(--muted);line-height:1.7}.profile-card{max-width:640px;margin:22px auto;background:var(--card);border:1px solid var(--border2);border-radius:18px;box-shadow:var(--shadow);padding:20px;direction:rtl}.role-badge{display:inline-block;background:var(--surface);border:1px solid var(--border);border-radius:999px;padding:4px 10px;color:var(--gold2);font-size:12px;margin-top:6px}.login-required{background:var(--surface);border-top:1px solid var(--border2);padding:10px 16px;text-align:center;color:var(--muted);font-size:13px;direction:rtl}.login-required button{margin-right:8px}
 </style>
@@ -205,7 +205,8 @@ let S={
   messages:[],messagesLoading:false,messageSubject:"",messageText:"",
   notes:[],notesLoading:false,noteTitle:"",noteText:"",
   shares:[],sharesLoading:false,shareTitle:"",shareContent:"",
-  suggestedQs:[],
+  suggestedQs:[],menuOpen:false,
+  popularQuestions:[],popularLoading:false,
   stats:null,statsLoading:false,
   files:[],filesLoading:false,folders:[],
   activeFolder:"الكل",selected:new Set(),
@@ -219,23 +220,29 @@ let S={
 function saveKB(){localStorage.setItem("kb_v3",JSON.stringify(S.knowledge));}
 
 const AR_QUESTIONS=[
-  "ما الفرق بين Rescue Basket وRescue Strop؟",
-  "ما أهم خطوة قبل دخول السباح إلى الماء؟",
-  "متى يتم استخدام Sea Dye Marker؟",
-  "ما إجراءات السلامة قبل الاقتراب من الناجي؟",
-  "ما الحالات التي تتطلب تحويل السؤال إلى المعلم؟",
-  "ما حدود استخدام Rescue Basket مع ناجٍ واعٍ؟"
+  "ما المتطلبات الأساسية لتجهيز سباح الإنقاذ قبل مهمة فوق الماء؟",
+  "ما الفرق العملي بين وسائل الإنقاذ عند التعامل مع ناجٍ واعٍ وناجٍ غير واعٍ؟",
+  "ما الإجراءات التي يجب مراجعتها قبل إنزال السباح من المروحية؟",
+  "ما المعلومات التي يجب تأكيدها بين الطاقم قبل الاقتراب من موقع الإنقاذ؟",
+  "ما الحالات التي تجعل الرجوع إلى أحدث مرجع رسمي ضروريًا قبل اتخاذ الإجراء؟",
+  "كيف تؤثر حالة البحر والرياح والرؤية على اختيار طريقة الإنقاذ؟",
+  "ما الأخطاء التدريبية الشائعة التي يجب تجنبها أثناء عمليات الرفع؟",
+  "ما نقاط السلامة التي يجب الانتباه لها عند استخدام معدات الإنقاذ؟",
+  "كيف يتم تحديد أن المعلومة كافية للإجابة وليست مجرد استنتاج؟",
+  "ما الفرق بين سؤال تدريبي وسؤال تشغيلي حساس داخل قاعدة المعرفة؟",
+  "ما المعلومات التي يجب أن تظهر في المصدر حتى تكون الإجابة موثوقة؟",
+  "كيف يمكن مقارنة مرجع محلي رسمي مع مرجع أمريكي عند وجود اختلاف؟"
 ];
 const EN_QUESTIONS=[
-  "What are the standard water entry techniques?",
-  "When should a rescue basket be selected?",
-  "What are the emergency procedures during hoisting?",
-  "How do you compare rescue devices by survivor condition?",
-  "What radio communication checks are required before launch?",
-  "What are the key safety considerations before swimmer deployment?"
+  "Which source should be used when CRSNF and OPNAVINST both mention the same rescue topic?",
+  "What source details should appear before trusting an operational rescue answer?",
+  "How should a rescue swimmer verify equipment-related guidance from the knowledge base?",
+  "When should the assistant refuse to answer a rescue procedure question?",
+  "What makes an Aviation Rescue Swimmer answer source-grounded rather than assumed?",
+  "How should conflicting rescue references be handled?"
 ];
-function pick(arr){return arr[Math.floor(Math.random()*arr.length)];}
-function makeSuggestedQuestions(){return [pick(AR_QUESTIONS),pick(EN_QUESTIONS)];}
+function shuffle(arr){const a=[...arr];for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];}return a;}
+function makeSuggestedQuestions(){return [...shuffle(AR_QUESTIONS).slice(0,3), shuffle(EN_QUESTIONS)[0]];}
 
 function userRole(){return S.profile?.role||"guest";}
 function canManage(){return ["admin","instructor"].includes(userRole());}
@@ -606,22 +613,24 @@ function html(){return`
   <div class="header">
     <div class="hlogo">
       <img src="${LOGO}" class="logo-img" alt="logo" style="width:42px;height:42px;object-fit:contain;flex-shrink:0">
-      <div><div class="htitle">مركز معرفة الإنقاذ البحري الجوي</div>
-        <div class="hsub">Aviation Rescue Swimmer Knowledge Base</div></div>
+      <div><div class="htitle">المنقذ الذكي</div></div>
     </div>
-    <div class="nav">
-      <div class="sdot"></div>
-      <button class="nb ${S.view==="chat"?"act":""}" id="nv-chat">💬 محادثة</button>
-      ${canManage()
-        ?`<button class="nb ${S.view==="files"?"act":""}" id="nv-files">📁 الملفات</button>
-          <button class="nb ${S.view==="pending"?"act":""}" id="nv-pending">❓ الأسئلة${S.pendingQs&&S.pendingQs.filter(q=>!q.answered).length>0?' <span style="background:var(--danger);color:#fff;border-radius:10px;padding:1px 6px;font-size:12px">'+S.pendingQs.filter(q=>!q.answered).length+'</span>':""}</button>
-          <button class="nb ${S.view==="users"?"act":""}" id="nv-users">👥 المستخدمون</button>
-          <button class="nb ${S.view==="stats"?"act":""}" id="nv-stats">📊 الإحصائيات</button>`
-        :""}
-      ${S.user
-        ?`<button class="nb ${S.view==="messages"?"act":""}" id="nv-messages">✉️ الرسائل</button><button class="nb ${S.view==="notes"?"act":""}" id="nv-notes">📝 ملاحظاتي</button><button class="nb ${S.view==="shares"?"act":""}" id="nv-shares">📨 اقتراح معلومة</button><button class="nb ${S.view==="profile"?"act":""}" id="nv-profile">👤 ${esc(S.profile?.display_name||S.user.email||"حسابي")}</button><button class="nb logout-btn" id="nv-out">تسجيل الخروج</button>`
-        :`<button class="nb ${S.view==="login"?"act":""}" id="nv-login">🔐 دخول</button>`}
-          <button onclick="toggleTheme()" style="width:32px;height:32px;border-radius:50%;border:1px solid var(--border);background:transparent;cursor:pointer;font-size:17px;display:flex;align-items:center;justify-content:center;" title="تبديل الثيم" id="theme-btn">${isDark()?"☀️":"🌙"}</button>
+    <div class="nav-menu">
+      <button class="menu-toggle" id="nav-toggle">☰ القائمة</button>
+      ${S.menuOpen?`<div class="nav">
+        <button class="nb ${S.view==="chat"?"act":""}" id="nv-chat">💬 المحادثة</button>
+        <button class="nb ${S.view==="popular"?"act":""}" id="nv-popular">⭐ الأكثر سؤالاً</button>
+        ${canManage()
+          ?`<button class="nb ${S.view==="files"?"act":""}" id="nv-files">📁 الملفات</button>
+            <button class="nb ${S.view==="pending"?"act":""}" id="nv-pending">❓ الأسئلة${S.pendingQs&&S.pendingQs.filter(q=>!q.answered).length>0?' <span style="background:var(--danger);color:#fff;border-radius:10px;padding:1px 6px;font-size:12px">'+S.pendingQs.filter(q=>!q.answered).length+'</span>':""}</button>
+            <button class="nb ${S.view==="users"?"act":""}" id="nv-users">👥 المستخدمون</button>
+            <button class="nb ${S.view==="stats"?"act":""}" id="nv-stats">📊 الإحصائيات</button>`
+          :""}
+        ${S.user
+          ?`<button class="nb ${S.view==="messages"?"act":""}" id="nv-messages">✉️ الرسائل</button><button class="nb ${S.view==="profile"?"act":""}" id="nv-profile">👤 ${esc(S.profile?.display_name||S.user.email||"حسابي")}</button><button class="nb logout-btn" id="nv-out">تسجيل الخروج</button>`
+          :`<button class="nb ${S.view==="login"?"act":""}" id="nv-login">🔐 دخول</button>`}
+        <button onclick="toggleTheme()" class="nb" title="تبديل الثيم" id="theme-btn">${isDark()?"☀️ نهاري":"🌙 ليلي"}</button>
+      </div>`:""}
     </div>
   </div>
   <div class="main">
@@ -630,6 +639,7 @@ function html(){return`
     ${S.view==="login"?buildLogin():""}
     ${S.view==="pending"?buildPending():""}
     ${S.view==="stats"?buildStats():""}
+    ${S.view==="popular"?buildPopular():""}
     ${S.view==="users"?buildUsers():""}
     ${S.view==="messages"?buildMessages():""}
     ${S.view==="notes"?buildNotes():""}
@@ -640,7 +650,7 @@ function html(){return`
 function shareMsg(platform,idx){
   const msg=S.msgs[idx];
   if(!msg||!msg.t)return;
-  const text=`${msg.t}\n\nAviation Rescue Swimmer Knowledge Base`;
+  const text=`${msg.t}\n\nالمنقذ الذكي`;
   if(platform==="copy"){
     navigator.clipboard?.writeText(text).then(()=>notif("تم نسخ الإجابة"));
     return;
@@ -683,10 +693,10 @@ function buildChat(){
   const typing=S.chatLoading?`<div class="mr bot"><div class="av bot">⚓</div><div class="bub bot typing"><div class="dot"></div><div class="dot"></div><div class="dot"></div></div></div>`:"";
   const welcome=S.msgs.length===0?`<div class="welcome">
     <div class="wicon">⚓</div>
-    <div class="wtitle">مركز معرفة الإنقاذ البحري الجوي</div>
-    <div class="wsub">اسأل عن مواضيع الإنقاذ البحري الجوي بالعربية أو الإنجليزية. سيبحث النظام في المراجع المرفوعة ويعرض الإجابة مع المصدر عند توفره. إذا لم يجد مرجعًا كافيًا، سيخبرك بذلك بوضوح.<br>
+    <div class="wtitle">المنقذ الذكي</div>
+    <div class="wsub">أداة ذكية مصممة للبحث والتحليل في الكتب والمراجع المحددة لها، وتعرض الإجابة مع المصدر إذا توفر.<br>
       <span style="font-size:13px;color:var(--success)">تنبيه: هذه المنصة أداة تعليمية مساعدة. المرجع الرسمي هو أحدث وثيقة معتمدة من جهة التدريب والعمل.</span><br>
-      ${!S.user?`<span style="font-size:13px;color:var(--muted)">يمكنك استخدام البحث مباشرة. تسجيل الدخول اختياري للحصول على ميزات المستخدم مثل حفظ السجل والاختبارات.</span>`:`<span style="font-size:13px;color:var(--muted)">سؤالان جديدان لهذا الدخول:</span>`}</div>
+      ${!S.user?`<span style="font-size:13px;color:var(--muted)">يمكنك استخدام البحث مباشرة. تسجيل الدخول اختياري للحصول على ميزات المستخدم مثل حفظ السجل والاختبارات.</span>`:`<span style="font-size:13px;color:var(--muted)">أسئلة عشوائية:</span>`}</div>
     <div class="wqs">
       ${(S.suggestedQs.length?S.suggestedQs:makeSuggestedQuestions()).map(q=>`<button class="nb qq" data-q="${q}">${q}</button>`).join("")}
     </div></div>`:"";
@@ -698,7 +708,7 @@ function buildChat(){
       <label class="img-btn" title="إرفاق صورة" style="width:46px;height:46px;flex-shrink:0;background:var(--card);border:1px solid var(--border);border-radius:12px;cursor:pointer;font-size:19px;display:flex;align-items:center;justify-content:center;color:var(--muted);position:relative;overflow:hidden">
           📎<input type="file" id="img-inp" accept="image/*" multiple style="position:absolute;inset:0;opacity:0;cursor:pointer;width:100%;height:100%">
         </label>
-        <textarea class="ci" id="ci" placeholder="اكتب سؤالك هنا... / Ask your question..." rows="1" dir="auto" ${S.chatLoading?"disabled":""}>${esc(S.inp)}</textarea>
+        <textarea class="ci" id="ci" placeholder="اسألني / Ask me" rows="1" dir="auto" ${S.chatLoading?"disabled":""}>${esc(S.inp)}</textarea>
       <button class="sbtn" id="sbtn" ${S.chatLoading||(!S.inp.trim()&&!S.pendingImages.length)?"disabled":""}>✈</button>
     </div></div>`;}
 
@@ -881,6 +891,17 @@ function buildMessages(){
   return `<div class="section-wrap"><div class="toolbar"><div><div class="atitle">✉️ صندوق الرسائل</div><div class="data-meta">تواصل داخلي بين المستخدمين والمسئول</div></div><button class="btn bo" id="refresh-messages">تحديث</button></div>${form}${S.messagesLoading?`<div class="empty-box">جاري التحميل...</div>`:cards?`<div class="stage-grid">${cards}</div>`:`<div class="empty-box">لا توجد رسائل</div>`}</div>`;
 }
 
+async function loadPopularQuestions(){
+  S.popularLoading=true;S.view="popular";S.menuOpen=false;render();
+  try{const d=await apiJSON('/api/popular-questions');S.popularQuestions=d.questions||[];}
+  catch(e){notif('خطأ الأكثر سؤالاً: '+e.message);}
+  S.popularLoading=false;render();
+}
+function buildPopular(){
+  const cards=(S.popularQuestions||[]).map((q,i)=>`<div class="data-card"><div style="display:flex;justify-content:space-between;gap:10px;align-items:flex-start"><div class="data-title">${i+1}. ${esc(q.question)}</div><span class="pill">${q.count} مرة</span></div><div class="data-meta">آخر سؤال: ${fmtDate(q.last_asked)}</div><div class="data-actions"><button class="btn bg bsm ask-popular" data-q="${esc(q.question)}">اسأل هذا السؤال</button></div></div>`).join('');
+  return `<div class="section-wrap"><div class="toolbar"><div><div class="atitle">⭐ الأسئلة الأكثر سؤالاً</div><div class="data-meta">تُستخرج تلقائيًا من سجل الأسئلة الشائع. إن لم تظهر نتائج كافية، فالسبب أن سجل الاستخدام ما زال محدودًا.</div></div><button class="btn bo" id="refresh-popular">تحديث</button></div>${S.popularLoading?`<div class="empty-box">جاري التحميل...</div>`:cards?`<div class="stage-grid">${cards}</div>`:`<div class="empty-box">لا توجد أسئلة متكررة كافية حتى الآن</div>`}</div>`;
+}
+
 function buildNotes(){
   const form=`<div class="data-card" style="margin-bottom:12px"><div class="data-title">📝 ملاحظة جديدة</div><input class="mini-input" id="note-title" placeholder="عنوان اختياري" value="${esc(S.noteTitle)}" style="margin-bottom:8px"><textarea class="mini-text" id="note-text" placeholder="اكتب ملاحظتك الخاصة">${esc(S.noteText)}</textarea><div class="data-actions"><button class="btn bg" id="add-note-btn">حفظ الملاحظة</button></div></div>`;
   const cards=(S.notes||[]).map(n=>`<div class="data-card"><div style="display:flex;justify-content:space-between;gap:8px"><div class="data-title">${esc(n.title||'ملاحظة')}</div><button class="btn bd bsm del-note" data-id="${n.id}">حذف</button></div><div style="white-space:pre-wrap;line-height:1.8">${esc(n.note)}</div><div class="data-meta">${fmtDate(n.created_at)}</div></div>`).join('');
@@ -920,22 +941,26 @@ function buildForm(d,isEdit){return`<div class="acard fc">
 
 function ev(){
   const g=id=>document.getElementById(id);
-  g("nv-chat")?.addEventListener("click",()=>{S.view="chat";render();});
-  g("nv-files")?.addEventListener("click",()=>{S.view="files";loadAll();});
-  g("nv-stats")?.addEventListener("click",()=>{S.view="stats";loadStats();});
-  g("nv-pending")?.addEventListener("click",()=>{S.view="pending";loadPendingQs().then(render);});
-  g("nv-users")?.addEventListener("click",loadUsers);
-  g("nv-messages")?.addEventListener("click",loadMessages);
+  g("nav-toggle")?.addEventListener("click",()=>{S.menuOpen=!S.menuOpen;render();});
+  g("nv-chat")?.addEventListener("click",()=>{S.view="chat";S.menuOpen=false;render();});
+  g("nv-popular")?.addEventListener("click",loadPopularQuestions);
+  g("nv-files")?.addEventListener("click",()=>{S.view="files";S.menuOpen=false;loadAll();});
+  g("nv-stats")?.addEventListener("click",()=>{S.view="stats";S.menuOpen=false;loadStats();});
+  g("nv-pending")?.addEventListener("click",()=>{S.view="pending";S.menuOpen=false;loadPendingQs().then(render);});
+  g("nv-users")?.addEventListener("click",()=>{S.menuOpen=false;loadUsers();});
+  g("nv-messages")?.addEventListener("click",()=>{S.menuOpen=false;loadMessages();});
   g("nv-notes")?.addEventListener("click",loadNotes);
   g("nv-shares")?.addEventListener("click",loadShares);
   g("refresh-stats")?.addEventListener("click",loadStats);
   g("refresh-users")?.addEventListener("click",loadUsers);
   g("refresh-messages")?.addEventListener("click",loadMessages);
+  g("refresh-popular")?.addEventListener("click",loadPopularQuestions);
   g("refresh-notes")?.addEventListener("click",loadNotes);
   g("refresh-shares")?.addEventListener("click",loadShares);
   g("send-message-btn")?.addEventListener("click",sendInternalMessage);
   g("add-note-btn")?.addEventListener("click",addNote);
   g("submit-share-btn")?.addEventListener("click",submitShare);
+  document.querySelectorAll(".ask-popular").forEach(b=>b.addEventListener("click",()=>{S.inp=b.dataset.q;S.view="chat";render();setTimeout(sendMsg,50);}));
   document.querySelectorAll(".user-role").forEach(x=>x.addEventListener("change",()=>updateUserRole(x.dataset.id,x.value)));
   document.querySelectorAll(".user-status").forEach(x=>x.addEventListener("change",()=>updateUserStatus(x.dataset.id,x.value)));
   document.querySelectorAll(".reply-msg").forEach(b=>b.addEventListener("click",()=>replyMessage(b.dataset.id)));
@@ -943,9 +968,9 @@ function ev(){
   document.querySelectorAll(".del-note").forEach(b=>b.addEventListener("click",()=>deleteNote(b.dataset.id)));
   document.querySelectorAll(".approve-share").forEach(b=>b.addEventListener("click",()=>reviewShare(b.dataset.id,'approved')));
   document.querySelectorAll(".reject-share").forEach(b=>b.addEventListener("click",()=>reviewShare(b.dataset.id,'rejected')));
-  g("nv-login")?.addEventListener("click",()=>{S.view="login";S.authErr="";render();});
+  g("nv-login")?.addEventListener("click",()=>{S.view="login";S.menuOpen=false;S.authErr="";render();});
   g("chat-login-btn")?.addEventListener("click",()=>{S.view="login";render();});
-  g("nv-profile")?.addEventListener("click",()=>{S.view="profile";S.profileMsg="";render();});
+  g("nv-profile")?.addEventListener("click",()=>{S.view="profile";S.menuOpen=false;S.profileMsg="";render();});
   g("nv-out")?.addEventListener("click",signOut);
   const pi=g("pi");
   if(pi){pi.addEventListener("input",e=>S.pw=e.target.value);pi.addEventListener("keydown",e=>{if(e.key==="Enter")doLogin();});setTimeout(()=>pi.focus(),60);}
