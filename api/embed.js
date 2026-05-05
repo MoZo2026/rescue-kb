@@ -16,20 +16,56 @@ module.exports = async function handler(req, res) {
   if (!SB_URL)     return res.status(500).json({error:"Missing SUPABASE_URL"});
   if (!SB_KEY)     return res.status(500).json({error:"Missing SUPABASE_SERVICE_KEY"});
 
-  function splitChunks(text, size=600, overlap=100) {
+  function inferHeading(line) {
+    const clean = String(line || "").trim();
+    if (!clean) return null;
+    const upperRatio = clean.replace(/[^A-Z]/g, "").length / Math.max(1, clean.replace(/[^A-Za-z]/g, "").length);
+    if (/^(chapter|section|part|article|appendix|figure|table)\b/i.test(clean)) return clean.slice(0, 180);
+    if (/^\d+(\.\d+)*\s+/.test(clean) && clean.length <= 160) return clean;
+    if (clean.length <= 90 && upperRatio > 0.65 && /[A-Z]/.test(clean)) return clean;
+    if (/^(الفصل|القسم|الباب|المادة|الملحق)\b/.test(clean) && clean.length <= 180) return clean;
+    return null;
+  }
+
+  function splitChunks(text, size=750, overlap=120) {
     const chunks = [];
-    const sentences = text.split(/(?<=[.!?\n])\s+/);
-    let current = "";
-    for (const s of sentences) {
-      if (current.length + s.length > size && current.length > 50) {
-        chunks.push(current.trim());
-        current = current.slice(-overlap) + " " + s;
+    const lines = String(text || "").split(/\n+/);
+    let currentHeading = "";
+    let buffer = "";
+
+    function pushBuffer() {
+      const body = buffer.trim();
+      if (body.length > 30) {
+        const prefix = [
+          file_name ? `File: ${file_name}` : "",
+          category ? `Category: ${category}` : "",
+          currentHeading ? `Section context: ${currentHeading}` : ""
+        ].filter(Boolean).join("\n");
+        chunks.push(prefix ? `${prefix}\n\n${body}` : body);
+      }
+      buffer = "";
+    }
+
+    for (const rawLine of lines) {
+      const line = String(rawLine || "").trim();
+      if (!line) continue;
+      const heading = inferHeading(line);
+      if (heading) {
+        currentHeading = heading;
+        if (buffer.length > size * 0.5) pushBuffer();
+        buffer += `\n${line}\n`;
+        continue;
+      }
+      if (buffer.length + line.length > size && buffer.length > 80) {
+        const tail = buffer.slice(-overlap);
+        pushBuffer();
+        buffer = currentHeading ? `${currentHeading}\n${tail}\n${line}` : `${tail}\n${line}`;
       } else {
-        current += " " + s;
+        buffer += ` ${line}`;
       }
     }
-    if (current.trim().length > 30) chunks.push(current.trim());
-    return chunks.slice(0, 300);
+    pushBuffer();
+    return chunks.slice(0, 400);
   }
 
   const chunks = splitChunks(text);
